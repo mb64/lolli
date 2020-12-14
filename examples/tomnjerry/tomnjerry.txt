@@ -1,0 +1,126 @@
+This solitaire game, ``Das verflixten Tom & Jerry Spiel'' ((c) 1989, Schmidt
+Spiele) consists of nine cards that have to be arranged in a 3x3 square.
+Printed on the cards are top and bottom halves of 4 Tom & Jerry characters
+which we identify as `p' (pajamas), `r' (rags), `w' (work clothes),
+and `l' (leisure clothes).  The cards are
+
+      l       r       r       p       r       w       l       r       l      
+    p 1 w   w 2 p   w 3 w   w 4 l   w 5 p   p 6 r   w 7 r   p 8 w   p 9 p    
+      r       l       l       r       l       l       p       l       r      
+
+We have numbered the cards for reference purposes.  Furthermore, we have
+rotated each card to the South and East sides are top halves and the West and
+North sides are bottom halves.  Note that not all cards have to be oriented
+the same way for the puzzle to be solvable, but we made this simplifying
+assumption.  As it turns out, there is such a solution.  It would not be
+difficult to modify the program to allow for rotation [exercise], but it would
+be less efficient.
+
+The solution strategy is to place cards on the table in this order
+
+   6 8 9
+   3 5 7
+   1 2 4
+
+checking at each turn that the matching constraints are satisfied.  When a
+dead end is reached we backtrack.
+
+A card is represented by a linear assumption
+
+  card <name> S W N E
+
+where S (South), W (West), N (North) and E (East) represent the labels
+of the corresponding side of the card.  A square is represented by
+a linear assumption
+
+  sq I X Y
+
+where I is (9 - J), where the square (X,Y) is supposed to be filled in
+the J'th move.
+
+Placing a card on (X,Y) is modelled by removing the corresponding card and
+square from the database and assuming (permanently, not linearly)
+
+  place X Y N E
+
+where N and E are the north and east labels of the card.  When a new card is
+placed we have to check 0, 1, or 2 constraints, depending on whether it is
+the origin, on the left or bottom edge, or elsewhere.  This is implemented
+by the predicate
+
+  check X Y S W
+
+which checks if a new card with south label S and west label W may be placed
+on (X,Y).  It is defined as follows
+
+  check z z S W.
+  check z (s Y) S W :- place z Y S E.
+  check (s X) z S W :- place X z N W.
+  check (s X) (s Y) S W :- place X (s Y) N W , place (s X) Y S E.
+
+Finally, the main predicate is
+
+  solve I R
+
+where I (an input variable) moves remain to be made and R (an output variable)
+returns a list of the cards in order they are placed in the solution.  Note
+that the `check' subgoal is ``banged'', i.e., it may only use permanent
+(intuitionistic) assumptions.  This is indicated by enclosing it in
+curly braces.  Also, the assumptions about the placement never have to
+be undone (except on backtracking) and are therefore also permanent.
+
+  solve (s I) (next C R) 
+	:- sq I X Y , card C S W N E ,
+	   {check X Y S W} ,
+	   (place X Y N E => solve I R).
+
+  solve z done.
+
+It turns out there is one solution where all the cards are oriented as
+indicated.  It is reported as two solutions since cards 2 and 5 are identical.
+
+  ?- tomnjerry --o top.
+  ?- solve (s (s (s (s (s (s (s (s (s z))))))))) Moves.
+  Moves_200161 <- next c2 (next c8 (next c9 (next c4 (next c1 (next c3
+		     (next c7 (next c5 (next c6 done))))))));
+  Moves_200161 <- next c5 (next c8 (next c9 (next c4 (next c1 (next c3
+		     (next c7 (next c2 (next c6 done))))))));
+  no
+
+The solution takes about 7 secs wall-clock time on a DecStation Alpha.
+The full program is summarized below.
+  - Frank
+----------------------------------------------------------------------
+MODULE tomnjerry.
+
+LINEAR sq (s (s (s (s (s (s (s (s z)))))))) z z.
+LINEAR sq (s (s (s (s (s (s (s z))))))) (s z) z.
+LINEAR sq (s (s (s (s (s (s z)))))) z (s z).
+LINEAR sq (s (s (s (s (s z))))) (s (s z)) z.
+LINEAR sq (s (s (s (s z)))) (s z) (s z).
+LINEAR sq (s (s (s z))) z (s (s z)).
+LINEAR sq (s (s z)) (s (s z)) (s z).
+LINEAR sq (s z) (s z) (s (s z)).
+LINEAR sq z (s (s z)) (s (s z)).
+
+LINEAR card c1 r p l w.
+LINEAR card c2 l w r p.
+LINEAR card c3 l w r w.
+LINEAR card c4 r w p l.
+LINEAR card c5 l w r p.
+LINEAR card c6 l p w r.
+LINEAR card c7 p w l r.
+LINEAR card c8 l p r w.
+LINEAR card c9 r p l p.
+
+check z z S W.
+check z (s Y) S W :- place z Y S E.
+check (s X) z S W :- place X z N W.
+check (s X) (s Y) S W :- place X (s Y) N W , place (s X) Y S E.
+
+solve (s I) (next C R) 
+      :- sq I X Y , card C S W N E ,
+	 {check X Y S W} ,
+	 (place X Y N E => solve I R).
+
+solve z done.

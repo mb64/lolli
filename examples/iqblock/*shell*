@@ -1,0 +1,28 @@
+% about 12 hours of computation time to generate these solutions
+Starting Lolli version 0.94, Mar 18, 1995 -ic,fp
+  (built with Standard ML of New Jersey, Version 0.93, February 15, 1993)...
+?- iqblock --o solve L.
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: purple1 :: yellow1 :: pink1 :: orange1 :: grass1 :: brown1 :: nil*
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: purple1 :: brown4 :: orange5 :: grass1 :: pink1 :: yellow1 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: purple7 :: yellow5 :: orange4 :: pink1 :: grass1 :: brown1 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: purple7 :: orange6 :: pink4 :: grass1 :: yellow6 :: brown1 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: purple7 :: orange6 :: brown5 :: grass1 :: pink1 :: yellow4 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: yellow7 :: brown4 :: purple1 :: orange4 :: grass1 :: pink4 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: green1 :: orange5 :: purple3 :: yellow5 :: pink1 :: grass1 :: brown1 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: yellow8 :: pink1 :: green1 :: purple5 :: orange3 :: grass3 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: yellow8 :: orange6 :: grass2 :: green2 :: purple2 :: pink4 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: pink3 :: purple8 :: yellow5 :: orange1 :: green2 :: grass1 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: pink3 :: yellow7 :: green1 :: purple5 :: orange6 :: grass3 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: pink3 :: grass4 :: green1 :: yellow5 :: orange3 :: purple6 :: brown1 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: pink4 :: yellow7 :: grass4 :: green2 :: purple2 :: brown6 :: orange6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: orange3 :: grass1 :: green1 :: purple5 :: pink4 :: brown6 :: yellow8 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: orange4 :: purple1 :: green1 :: brown4 :: grass1 :: pink4 :: yellow6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass2 :: green1 :: purple5 :: orange6 :: pink4 :: brown6 :: yellow8 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass2 :: green1 :: purple5 :: brown4 :: orange5 :: pink4 :: yellow6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass2 :: green1 :: yellow3 :: purple1 :: pink4 :: orange4 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass2 :: green1 :: yellow3 :: purple7 :: pink4 :: orange7 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass2 :: green1 :: yellow3 :: orange5 :: pink4 :: purple5 :: brown6 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass2 :: green1 :: yellow3 :: brown4 :: pink4 :: orange4 :: purple4 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: grass3 :: green1 :: purple5 :: orange1 :: pink4 :: brown6 :: yellow8 :: nil;
+L_1 <- blue1 :: forest1 :: tan1 :: brown7 :: purple5 :: yellow7 :: green3 :: grass1 :: pink1 :: orange3 :: nil;
+L_1 <- blue1 :: forest1 :: purple1 :: green1 :: yellow7 :: orange4 :: brown4 :: grass3 :: pink4 :: tan2 :: nil;

@@ -1,0 +1,5 @@
+group is
+  interpreter/sources.cm
+  ml-yacc/sources.cm
+  parser/sources.cm
+  frontend/sources.cm

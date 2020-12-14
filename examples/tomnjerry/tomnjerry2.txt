@@ -1,0 +1,24 @@
+The version in tomnjerry2 also allows arbitrary rotations.
+Within 25 minutes we obtain all solutions:
+
+?- tomnjerry2 --o solve (s (s (s (s (s (s (s (s (s z))))))))) Moves.
+Moves_1 <- next c2 (next c8 (next c9 (next c4 (next c1 (next c3 (next c7 (next c5 (next c6 done))))))));
+Moves_1 <- next c2 (next c6 (next c8 (next c5 (next c7 (next c9 (next c1 (next c4 (next c3 done))))))));
+Moves_1 <- next c2 (next c1 (next c6 (next c3 (next c7 (next c5 (next c4 (next c8 (next c9 done))))))));
+Moves_1 <- next c3 (next c4 (next c1 (next c9 (next c7 (next c2 (next c8 (next c6 (next c5 done))))))));
+Moves_1 <- next c3 (next c4 (next c1 (next c9 (next c7 (next c5 (next c8 (next c6 (next c2 done))))))));
+Moves_1 <- next c3 (next c9 (next c2 (next c5 (next c1 (next c6 (next c8 (next c7 (next c4 done))))))));
+Moves_1 <- next c3 (next c9 (next c5 (next c2 (next c1 (next c6 (next c8 (next c7 (next c4 done))))))));
+Moves_1 <- next c4 (next c7 (next c8 (next c6 (next c1 (next c2 (next c5 (next c9 (next c3 done))))))));
+Moves_1 <- next c4 (next c7 (next c8 (next c6 (next c1 (next c5 (next c2 (next c9 (next c3 done))))))));
+Moves_1 <- next c5 (next c8 (next c9 (next c4 (next c1 (next c3 (next c7 (next c2 (next c6 done))))))));
+Moves_1 <- next c5 (next c6 (next c8 (next c2 (next c7 (next c9 (next c1 (next c4 (next c3 done))))))));
+Moves_1 <- next c5 (next c1 (next c6 (next c3 (next c7 (next c2 (next c4 (next c8 (next c9 done))))))));
+Moves_1 <- next c6 (next c2 (next c7 (next c3 (next c1 (next c4 (next c9 (next c8 (next c5 done))))))));
+Moves_1 <- next c6 (next c5 (next c7 (next c3 (next c1 (next c4 (next c9 (next c8 (next c2 done))))))));
+Moves_1 <- next c9 (next c8 (next c4 (next c2 (next c7 (next c3 (next c6 (next c1 (next c5 done))))))));
+Moves_1 <- next c9 (next c8 (next c4 (next c5 (next c7 (next c3 (next c6 (next c1 (next c2 done))))))));
+no
+
+The 16 answers means there are 8 solutions (since two cards are the same)
+of which all but 2 are essentially symmetric (each solution can be rotated).

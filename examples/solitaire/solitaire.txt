@@ -1,0 +1,170 @@
+This solitaire game consists of a board of the following shape
+and initial configuration
+
+        x
+       x x
+      x o x
+     x x x x
+    x x x x x
+
+where x denotes a peg and o an empty hole.  A peg may jump over
+an adjacent peg if the hole behind it is empty.  The goal is to
+be left with one peg.  I fooled around with this for about 2
+minutes and decided it was too hard by hand---a Lolli program
+was called for.
+
+The representation is simple: we address the holes with two
+natural numbers between 0 and 5, tilting the shape
+
+  00
+  10 11
+  20 21 22
+  30 31 32 33
+  40 41 42 43 44
+
+and then introduce a predicate
+
+  b X Y D
+
+where D (either `peg' or `empty') describes the contents of hole XY.  We
+initialize the board with a linear assumption fixing the beginning state.
+
+LINEAR b z z peg.
+LINEAR b (s z) z peg.
+LINEAR b (s z) (s z) peg.
+LINEAR b (s (s z)) z peg.
+LINEAR b (s (s z)) (s z) empty.
+LINEAR b (s (s z)) (s (s z)) peg.
+LINEAR b (s (s (s z))) z peg.
+LINEAR b (s (s (s z))) (s z) peg.
+LINEAR b (s (s (s z))) (s (s z)) peg.
+LINEAR b (s (s (s z))) (s (s (s z))) peg.
+LINEAR b (s (s (s (s z)))) z peg.
+LINEAR b (s (s (s (s z)))) (s z) peg.
+LINEAR b (s (s (s (s z)))) (s (s z)) peg.
+LINEAR b (s (s (s (s z)))) (s (s (s z))) peg.
+LINEAR b (s (s (s (s z)))) (s (s (s (s z)))) peg.
+
+Next we introduce a basic predicate
+
+  jump N
+
+which tests if we can make N consecutive jumps.  Because of the hexagonal
+geometry, there are 6 possible directions for jumping (most of them impossible
+from any given hole).  The following program allows those precisely those
+jumps: it first checks (and thereby consumes) whether we have a configuration
+in which a jump is legal, then performs it (by assuming the necessary
+instances of the b predicate), and continues with the assignment to make one
+fewer jump.  Furthermore, we succeed if there are no jumps to make.
+
+jump (s N) :-
+          b X Y peg , b (s X) Y peg , b (s (s X)) Y empty ,
+          ((b X Y empty , b (s X) Y empty , b (s (s X)) Y peg)
+	   -o jump N).
+jump (s N) :-
+          b X Y peg , b (s X) (s Y) peg , b (s (s X)) (s (s Y)) empty ,
+          ((b X Y empty , b (s X) (s Y) empty , b (s (s X)) (s (s Y)) peg)
+	   -o jump N).
+jump (s N) :- b X Y peg , b X (s Y) peg , b X (s (s Y)) empty ,
+          ((b X Y empty , b X (s Y) empty , b X (s (s Y)) peg)
+	   -o jump N).
+jump (s N) :-
+          b (s (s X)) Y peg , b (s X) Y peg , b X Y empty ,
+	  ((b (s (s X)) Y empty , b (s X) Y empty , b X Y peg)
+	   -o jump N).
+jump (s N) :-
+          b (s (s X)) (s (s Y)) peg , b (s X) (s Y) peg , b X Y empty ,
+	  ((b (s (s X)) (s (s Y)) empty , b (s X) (s Y) empty , b X Y peg)
+	   -o jump N).
+jump (s N) :-
+          b X (s (s Y)) peg , b X (s Y) peg , b X Y empty ,
+          ((b X (s (s Y)) empty , b X (s Y) empty , b X Y peg)
+	   -o jump N).
+jump z :- erase.
+
+The query that demonstrates if the puzzle is solvable asks Lolli
+to check if it is possible to make 13 consecutive jumps.  Since we
+start with 14 pegs, this means only one will be left.
+
+  ?- solitaire --o top.
+  ?- jump (s (s (s (s (s (s (s (s (s (s (s (s (s z))))))))))))).
+  solved
+
+It succeeds after 25 minutes (wall-clock time) under version 94, indicating
+there is a solution.  Since Lolli does not have proof terms, I instrumented
+the predicate to explicitly maintain enough information so I can carry
+out the solution on the board.  This instrumented version takes about
+27 minutes to return the first solution.  (Times are on a Dec Alpha).
+
+I challenge anyone to write a more concise program more quickly to solve this
+puzzle (the instrumented version is below), but I will not extend a challenge
+to write a more efficient version.  It will be interesting to see how
+quickly this puzzle can be solved given reasonable interpreter technology
+like destructive substitutions, etc.
+
+  - Frank
+
+P.S.: I let it run overnight and the program determined that there is no
+solution where the one remaining peg ends up in the hole which is
+initially empty.
+----------------------------------------------------------------------
+MODULE solitaire2.
+
+LINEAR b z z peg.
+LINEAR b (s z) z peg.
+LINEAR b (s z) (s z) peg.
+LINEAR b (s (s z)) z peg.
+LINEAR b (s (s z)) (s z) empty.
+LINEAR b (s (s z)) (s (s z)) peg.
+LINEAR b (s (s (s z))) z peg.
+LINEAR b (s (s (s z))) (s z) peg.
+LINEAR b (s (s (s z))) (s (s z)) peg.
+LINEAR b (s (s (s z))) (s (s (s z))) peg.
+LINEAR b (s (s (s (s z)))) z peg.
+LINEAR b (s (s (s (s z)))) (s z) peg.
+LINEAR b (s (s (s (s z)))) (s (s z)) peg.
+LINEAR b (s (s (s (s z)))) (s (s (s z))) peg.
+LINEAR b (s (s (s (s z)))) (s (s (s (s z)))) peg.
+
+% I am using sw, se, e, ne, nw, w for the six possible directions
+% of a jump, the arguments indicate the origin of the jump.
+jump (j (sw X Y) N) :-
+          b X Y peg , b (s X) Y peg , b (s (s X)) Y empty ,
+          ((b X Y empty , b (s X) Y empty , b (s (s X)) Y peg)
+	   -o jump N).
+jump (j (se X Y) N) :-
+          b X Y peg , b (s X) (s Y) peg , b (s (s X)) (s (s Y)) empty ,
+          ((b X Y empty , b (s X) (s Y) empty , b (s (s X)) (s (s Y)) peg)
+	   -o jump N).
+jump (j (e X Y) N) :- b X Y peg , b X (s Y) peg , b X (s (s Y)) empty ,
+          ((b X Y empty , b X (s Y) empty , b X (s (s Y)) peg)
+	   -o jump N).
+jump (j (ne (s (s X)) Y) N) :-
+          b (s (s X)) Y peg , b (s X) Y peg , b X Y empty ,
+	  ((b (s (s X)) Y empty , b (s X) Y empty , b X Y peg)
+	   -o jump N).
+jump (j (nw (s (s X)) (s (s Y))) N) :-
+          b (s (s X)) (s (s Y)) peg , b (s X) (s Y) peg , b X Y empty ,
+	  ((b (s (s X)) (s (s Y)) empty , b (s X) (s Y) empty , b X Y peg)
+	   -o jump N).
+jump (j (w X (s (s Y))) N) :-
+          b X (s (s Y)) peg , b X (s Y) peg , b X Y empty ,
+          ((b X (s (s Y)) empty , b X (s Y) empty , b X Y peg)
+	   -o jump N).
+jump f :- erase.
+----------------------------------------------------------------------
+?- solitaire2 --o top.
+?- jump (j J1 (j J2 (j J3 (j J4 (j J5 (j J6 (j J7 (j J8 (j J9 (j J10 (j J11 (j J12 (j J13 f))))))))))))).
+J1_10319350 <- ne (s (s (s (s z)))) (s z) ,
+J2_10319349 <- w (s (s (s z))) (s (s (s z))) ,
+J3_10319348 <- se (s z) z ,
+J4_10319347 <- se (s z) (s z) ,
+J5_10319346 <- ne (s (s (s z))) z ,
+J6_10319345 <- sw z z ,
+J7_10319344 <- nw (s (s (s (s z)))) (s (s (s (s z)))) ,
+J8_10319343 <- w (s (s (s (s z)))) (s (s (s z))) ,
+J9_10319342 <- sw (s (s z)) (s (s z)) ,
+J10_10319341 <- e (s (s (s (s z)))) (s z) ,
+J11_10319340 <- se (s (s z)) z ,
+J12_10319339 <- w (s (s (s (s z)))) (s (s (s z))) ,
+J13_10319338 <- e (s (s (s (s z)))) z

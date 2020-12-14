@@ -1,0 +1,2633 @@
+\documentstyle[10pt,stmaryrd]{article}
+\pagestyle{plain}
+
+\newcommand{\G}
+ {\Gamma}
+\newcommand{\D}
+ {\Delta}
+\newcommand{\X}
+ {\Xi}
+
+\newcommand{\pr}[2]
+ {#1 \, \Longrightarrow \, #2}
+\newcommand{\resd}[2]
+ {#1 \, \stackrel{r}{\Longrightarrow} \, #2}
+\newcommand{\resD}[2]
+ {#1 \, \stackrel{rc}{\Longrightarrow} \, #2}
+\newcommand{\decd}[3]
+ {#1 \, \gg \, #2 \, \backslash \, #3}
+\newcommand{\ioVI}[3]
+ {#1 \backslash \, #2 \Longrightarrow \, #3}
+\newcommand{\ioVII}[4]
+ {#1 \backslash \, #2 \Longrightarrow_{#4} \, #3}
+\newcommand{\ioVIII}[4]
+ {#1 \backslash \, #2 \Longrightarrow_{#4} \, #3}
+\newcommand{\ioVIIIa}[2]
+ {#1 \, \Longrightarrow' \, #2}
+\newcommand{\ioIX}[4]
+ {#1 \backslash \, #2 \Longrightarrow_{#4} \, #3}
+\newcommand{\ioIXb}[5]
+ {#1 \backslash \, #2 \Longrightarrow_{#4}^{#5} \, #3}
+\newcommand{\ioIXc}[5]
+ {#1 \backslash \, #2 \Longrightarrow_{#4}^{#5} \, #3}
+\newcommand{\ioIXd}[4]
+ {#1 \backslash \, #2 \Longrightarrow_{#4} \, #3}
+
+\newcommand{\fb}[2]
+ {\fbox{$#1$}^{\,#2\,}}
+\newcommand{\ob}[3]
+ {\overbrace{#1}^{_{(#2) \, \mapsto \, #3}}}
+\newcommand{\ub}[3]
+ {\underbrace{#1}_{^{(#2) \, \mapsto \, #3}}}
+
+
+\newcommand{\ruleI}[3]
+ {\frac
+   {\displaystyle #1\rule[-1.7ex]{0em}{1ex}}
+   {\displaystyle #2\rule[-2ex]{0em}{5ex}}
+  \,{\scriptstyle {\rm {\bf #3}}}}
+\newcommand{\ruleII}[4]
+ {\frac
+   {\displaystyle #1\hspace{2em}#2\rule[-1.7ex]{0em}{1ex}}
+   {\displaystyle #3\rule[-2ex]{0em}{5ex}}
+  \, {\scriptstyle {\rm {\bf #4}}}}
+\newcommand{\stack}[2]
+ {\begin{array}{c}
+   #1 \\
+   #2
+  \end{array}}
+
+\newcommand{\And}
+ {\, \wedge \,}
+\newcommand{\Or}
+ {\, \vee \,}
+\newcommand{\Not}
+ {\neg}
+\newcommand{\Imp}
+ {\, \rightarrow \,}
+\newcommand{\Top}
+ {\top}
+\newcommand{\Bot}
+ {\bot}
+\newcommand{\E}
+ {\exists}
+\newcommand{\A}
+ {\forall}
+
+
+\newcommand{\eq}[2]
+ {#1 \stackrel{.}{=} #2}
+\newcommand{\One}
+ {{\bf 1}}
+\newcommand{\Zero}
+ {{\bf 0}}
+\newcommand{\Times}
+ {\, \otimes \,}
+\newcommand{\With}
+ {\, \binampersand \,}
+% {\, \& \,}
+\newcommand{\Plus}
+ {\, \oplus \,}
+\newcommand{\Lolli}
+ {\, \mbox{$-\!\circ$} \,}
+\newcommand{\Par}
+ {\, \# \,}
+\newcommand{\Wave}
+ {\, \leadsto \,}
+\newcommand{\Nil}
+ {{^\bot}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+\textwidth=16cm
+\textheight=20cm
+\hoffset=-1.7cm
+\voffset=-1cm
+\parskip=0.5ex
+%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\topfraction}{1.0}
+\renewcommand{\textfraction}{0.0}
+\renewcommand{\floatpagefraction}{0.0}
+
+\title{\bf Efficient and complete\\
+           resource consumption in Lolli}
+\author{Iliano Cervesato}
+\date{\today}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\renewcommand{\thepage}{}
+
+\maketitle
+
+The design of linear logic programming languages opens a number of new
+implementation challenges not present in the case of more traditional logic
+languages such as {\em Prolog\/} or {\em $\lambda$Prolog}. Among these, the
+problem of efficiently managing the linear context when solving a
+multiplicative goal is of crucial importance for the use of these languages
+in large-scale applications. This document studies this problem in the case
+of {\em Lolli\/} \cite{HoM94}. We first give a proof-theoretic presentation
+of the operational semantics of {\em Lolli\/} as a {\em resolution system}.
+The non-deterministic distribution of the linear context featured by this
+system is overcome by a series of {\em resource management systems\/} ({\em
+  I/O models\/} in \cite{HoM94}), with version numbers that range from 0.6 to
+0.94. Systems 0.6 and 0.7 were devised by Hodas and Miller \cite{HoM94} and
+constitute the core of their {\em Prolog\/} prototype and released {\em ML\/}
+implementation of {\em Lolli\/} respectively.
+
+Most of the resource management systems we review in this document have been
+implemented.  The successive versions represent formal models for solving
+conceptual problems present in their predecessors, or simply to provide a
+view on better implementation techniques.
+
+We did not prove most of the soundness and completeness theorems that relate
+these systems. In particular, no proof is included here. We believe these
+results are simple enough to be reconstructed by the reader.
+
+
+\newpage
+\setcounter{page}{1}
+\renewcommand{\thepage}{\em \roman{page}}
+
+\tableofcontents
+
+\listoffigures
+
+\newpage
+\setcounter{page}{1}
+\renewcommand{\thepage}{\arabic{page}}
+
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|cc|}
+      \hline &\\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\resd{\G;\D}{G}}
+        {\resd{\G;\D,D}{a}}
+        {d/r}$
+      &
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\resd{\G,D;\D}{G}}
+        {\resd{\G,D;\D}{a}}
+        {!d/r}$
+      \\
+      \multicolumn{2}{|c|}{
+        $\ruleI
+          {}
+          {\resd{\G;\D}{\eq{a}{a}}}
+          {I r}$}
+      \\
+
+      $\ruleI
+        {}
+        {\resd{\G;\D}{\Top}}
+        {\Top r}$
+      &
+      $\ruleI
+        {}
+        {\resd{\G;\cdot}{\One}}
+        {\One r}$
+      \\&\\
+
+      $\ruleII
+        {\resd{\G;\D}{G_1}}
+        {\resd{\G;\D}{G_2}}
+        {\resd{\G;\D}{G_1 \With G_2}}
+        {\With r}$
+      &
+      $\ruleII
+        {\resd{\G;\D_1}{G_1}}
+        {\resd{\G;\D_2}{G_2}}
+        {\resd{\G;\D_1,\D_2}{G_1 \Times G_2}}
+        {\Times r}$
+      \\&\\
+
+      $\left\{
+        \ruleI
+          {\resd{\G;\D}{G_1}}
+          {\resd{\G;\D}{G_1 \Plus G_2}}
+          {\Plus r_1}
+      \right.$
+      &
+      $\left.
+        \ruleI
+          {\resd{\G;\D}{G_2}}
+          {\resd{\G;\D}{G_1 \Plus G_2}}
+          {\Plus r_2}
+      \right\}$
+      \\&\\
+
+      $\ruleI
+        {\resd{\G;\D,D}{G}}
+        {\resd{\G;\D}{D \Lolli G}}
+        {\Lolli r}$
+      &
+      $\ruleI
+        {\resd{\G,D;\D}{G}}
+        {\resd{\G;\D}{D \Imp G}}
+        {\Imp r}$
+      \\&\\
+      \multicolumn{2}{|c|}{
+        $\ruleI
+          {\resd{\G;\cdot}{G}}
+          {\resd{\G;\cdot}{!G}}
+          {! r}$}
+      \\&\\
+
+      $\ruleI
+        {\resd{\G;\D}{[c/x]G}}
+        {\resd{\G;\D}{\A x. G}}
+        {\A r^*}$
+      &
+      $\ruleI
+        {\resd{\G;\D}{[t/x]G}}
+        {\resd{\G;\D}{\E x. G}}
+        {\E r}$
+      \\
+      \hline
+    \end{tabular}
+
+    \caption{Resolution for linear hereditary Harrop formulas}
+    \label{fig:Resolution1}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|cc|}
+      \hline &\\
+      \multicolumn{2}{|c|}{
+        $\ruleI
+          {}
+          {\decd{a'}{a}{\eq{a'}{a}}}
+          {I d}$}
+      \\&\\
+      $\ruleI
+        {}
+        {\decd{\Top}{a}{\Zero}}
+        {\Top d}$
+      &
+      $\ruleII
+        {\decd{D_1}{a}{G_1}}
+        {\decd{D_2}{a}{G_2}}
+        {\decd{D_1 \With D_2}{a}{G_1 \Plus G_2}}
+        {\With d}$
+      \\&\\
+
+      $\ruleI
+        {\decd{D}{a}{G'}}
+        {\decd{G \Lolli D}{a}{G' \Times G}}
+        {\Lolli d}$
+      &
+      $\ruleI
+        {\decd{D}{a}{G'}}
+        {\decd{G \Imp D}{a}{G' \Times !G}}
+        {\Imp d}$
+      \\&\\
+
+      $\ruleI
+        {\decd{D}{a}{G}}
+        {\decd{\A x. D}{a}{\E x. G}}
+        {\A d}$
+      &\\
+      \hline
+    \end{tabular}
+
+    \caption{Resolution for linear hereditary Harrop formulas (Continued)}
+    \label{fig:Resolution2}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+\newpage
+\section{Resolution for linear hereditary Harrop formulas}
+\label{s:Resolution}
+
+The {\em resolution system\/} \cite{Pfe95} for {\em linear hereditary Harrop
+  formulas\/} ({\em LHHF\/} for short), displayed in figures
+\ref{fig:Resolution1} and \ref{fig:Resolution2}, expresses the operational
+semantics of {\em Lolli} at a level of abstraction such that:
+
+\begin{itemize}
+\item
+  the generated proofs are {\em goal-directed\/} and {\em focused\/} (and
+  therefore {\em uniform\/});
+\item
+  when a program formula $D$ is selected in order to solve an atomic goal
+  $a$, it is transformed into an appropriate but equivalent goal $G$
+  before the computation is allowed to proceed ({\em resolution\/});
+\item
+  the following issues are not addressed within the proof system and
+  therefore constitute {\em non-deterministic choices\/}:
+  \begin{itemize}
+  \item
+    the selection of the program formula to use when a goal is atomic, i.e.\
+    in rules {\bf d/r} and {\bf !d/r} ({\em disjunctive non-determinism\/}),
+  \item 
+    the sequentialization of goals in the binary rules, {\bf $\With$ r} and
+    {\bf $\Times$ r} in particular ({\em conjunctive non-determinism\/}),
+  \item
+    the term $t$ to use in rule {\bf $\E$r} when solving an existential
+    goal ({\em existential non-determinism\/}), and
+  \item
+    the way to split the linear context in rule {\bf $\Times$r} when
+    solving a multiplicative conjunction ({\em resource distribution
+      non-determinism\/}).
+  \end{itemize}
+\end{itemize}
+
+This system is different but equivalent to the {\em uniform provability
+  system with backchaining\/} ${\cal L}'$ of Hodas and Miller, presented in
+\cite{HoM94}. Indeed, we have that the judgment $\resd{\G;\D}{G}$ is provable
+if and only if the sequent $\G;\D\,\longrightarrow\,G$ is derivable in ${\cal
+  L}'$. We will now point out the main differences between these two systems.
+
+The rules in figure \ref{fig:Resolution1} correspond exactly to the right
+introduction rules in \cite{HoM94} with the only exception of {\bf d/r}, {\bf
+  !d/r} and {\bf I r}, which have to do with the backchaining rule these
+authors rely upon. When the goal formula $a$ is atomic, a program formula $D$
+is selected from either the intuitionistic context (rule {\bf d/r}) or from
+the linear context (rule {\bf !d/r}). In both cases, it is passed to the {\em
+  formula decomposition judgment\/} ($\decd{D}{a}{G}$) together with the
+atomic formula $a$ in order to extract a goal formula $G$ equivalent to $D$,
+in a sense to be explained shortly. At this point, the computation proceeds
+by solving $G$; the program formula $D$ is removed from the context in the
+case it was a linear formula. Goals of the form $\eq{a}{a'}$ (rule {\bf I r})
+are technical devices needed during the formula decomposition process. They
+can be viewed as identity tests for atomic formulas.
+
+Program formulas can be seen as partial definitions of the atomic
+propositions (or the corresponding predicate symbol) that can appear in a
+goal position. Therefore, when selecting a program formula $D$ from the
+context in order to solve an atomic goal $a$, we would like to transform $D$
+into a {\em clause\/} of the form $G \Lolli a$, that can be immediately used
+to reduce the problem of proving $a$ to that of solving $G$. This is exactly
+what is achieved by the formula decomposition judgment $\decd{D}{a}{G}$. In
+order to make this transformation, we need to extend the language of {\em
+  LHHF\/} with two new constructs: the equality test $\eq{a}{a'}$ among
+atomic formulas, and additive falsity $\Zero$ (this logical constant could be
+admitted without problems in the language of {\em LHHF\/} for goals).
+
+The semantics of the formula decomposition judgment correspond to Hodas and
+Miller's specifications for the set $\|\cdot\|$ associated with the
+backchaining rule they use in \cite{HoM94}. Our description is more
+algorithmic and does not rely on infinite objects such as $\|\cdot\|$.  We
+will now briefly describe the rules for this judgment, displayed in figure
+\ref{fig:Resolution2}.  Remember that only $\Top$, $\With$, $\Lolli$, $\Imp$
+or $\A$ can appear as the top connective of a program formula.
+
+The presence of additive conjunction in the context permits to have a single
+program formula $D$ partially defining several atomic propositions. If, among
+these, we are interested in the atomic formula $a$ and we want to rewrite $D$
+as $G \Lolli a$, we need to replace each defined atom $a'$ with a {\em
+  test\/} against $a$ (rule {\bf I d}). We use a formula of the form
+$\eq{a}{a'}$ for this purpose.  As expected, this formula succeeds as a goal
+only if $a$ and $a'$ are the same atomic proposition (rule {\bf I r}).
+  
+In a program position, the logical constant $\Top$ represents a total lack of
+information. Its operational behavior is not defined in such a context since
+it should not have one. The equivalent goal connective should represent
+failure. We use the logical constant $\Zero$ of linear logic, which does not
+have a right sequent rule, for this purpose (rule {\bf $\Top$d}).
+  
+When using a program formula which main connective is $\With$, one of the
+conjuncts is kept while the other is thrown away; this corresponds to
+choosing the definition for one atomic goal formula out of multiple
+possibilities. A similar behavior in a goal position is obtained by using the
+additive disjunction of linear logic, $\Plus$ (rule {\bf $\With$d}).
+  
+A linear implication $G \Lolli D$ in a program position is processed by
+solving its antecedent $G$ as a subgoal and then continuing with whatever
+computation is specified by its consequent. This is clearly a conjunctive
+behavior. Since the context is split between the branch of the proof-tree
+that solves $G$, and the remainder of the computation, that decomposes $D$,
+this behavior is caught by multiplicative conjunction, $\Times$, as the
+emulation of $\Lolli$ in a goal position (rule {\bf $\Lolli$d}).
+
+The case of intuitionistic implication is handled in a similar way. Indeed,
+remember that $A \Imp B$ is defined as $!A \Lolli B$. Therefore,
+multiplicative conjunction is used also in this case (rule {\bf $\Imp$d}).
+
+Whenever a program formula $D$ is enclosed by a universal quantification, we
+need to instantiate the quantified variables with an appropriate term in
+order to proceed with the computation (this is achieved concretely by
+unifying the current goal with the formula defined in $D$). We can emulate
+this behavior by using an existential quantifier in the corresponding goal
+position (rule {\bf $\A$d}).
+
+It is interesting to notice that the resulting goal connectives are the De
+Morgan duals of the program operators they origin from, with the exception of
+the test operator. Duality is obtained with respect to linear negation
+($\cdot\Nil$). This result is indeed sensible: from a sequent calculus point
+of view, a program formula is an object that lives in the left-hand side of
+the sequent arrow while a goal resides on the right-hand side. Therefore, if
+two such entities are to be equivalent, in some sense, they must be dual of
+each other. We have indeed the following correspendence:
+
+%\medskip
+$$\begin{array}{rrcll}
+  & \Top\Nil
+  & =
+  & \Zero
+\\
+  & (D_1 \With D_2)\Nil
+  & =
+  & D_1\Nil \Plus D_2\Nil
+\\
+  & (G \Lolli D)\Nil
+  & =
+  & G \Times D\Nil
+\\
+  & (G \Imp D)\Nil
+  & =
+  & !G \Times D\Nil
+\\
+  & (\A x. D)\Nil
+  & =
+  & \E x. D\Nil
+\end{array}$$
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|cc|}
+      \hline &\\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVI{\G;\D^I}{\D^O}{G}}
+        {\ioVI{\G;\D^I,D}{\D^O}{a}}
+        {d/io.6}$
+      &
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVI{\G,D;\D^I}{\D^O}{G}}
+        {\ioVI{\G,D;\D^I}{\D^O}{a}}
+        {!d/io.6}$
+      \\&\\
+      \multicolumn{2}{|c|}{
+        $\ruleI
+          {}
+          {\ioVI{\G;\D^I}{\D^I}{\eq{a}{a}}}
+          {I \: io.6}$}
+      \\&\\
+
+      $\ruleI
+        {}
+        {\ioVI{\G;\D,\D^O}{\D^O}{\Top}}
+        {\Top \: io.6}$
+      &
+      $\ruleI
+        {}
+        {\ioVI{\G;\D^I}{\D^I}{\One}}
+        {\One \: io.6}$
+      \\&\\
+
+      $\ruleII
+        {\ioVI{\G;\D^I}{\D^O}{G_1}}
+        {\ioVI{\G;\D^I}{\D^O}{G_2}}
+        {\ioVI{\G;\D^I}{\D^O}{G_1 \With G_2}}
+        {\With io.6}$
+      &
+      $\ruleII
+        {\ioVI{\G;\D^I}{\D'}{G_1}}
+        {\ioVI{\G;\D'}{\D^O}{G_2}}
+        {\ioVI{\G;\D^I}{\D^O}{G_1 \Times G_2}}
+        {\Times io.6}$
+      \\&\\
+
+      $\left\{
+        \ruleI
+          {\ioVI{\G;\D^I}{\D^O}{G_1}}
+          {\ioVI{\G;\D^I}{\D^O}{G_1 \Plus G_2}}
+          {\Plus_1 io.6}
+      \right.$
+      &
+      $\left.
+        \ruleI
+          {\ioVI{\G;\D^I}{\D^O}{G_2}}
+          {\ioVI{\G;\D^I}{\D^O}{G_1 \Plus G_2}}
+          {\Plus_2 io.6}
+      \right\}$
+      \\&\\
+
+      $\ruleI
+        {\ioVI{\G;\D^O,\D,D}{\D^O}{G}}
+        {\ioVI{\G;\D^O,\D}{\D^O}{D \Lolli G}}
+        {\Lolli io.6}$
+      &
+      $\ruleI
+        {\ioVI{\G,D;\D^I}{\D^O}{G}}
+        {\ioVI{\G;\D^I}{\D^O}{D \Imp G}}
+        {\Imp io.6}$
+      \\&\\
+      \multicolumn{2}{|c|}{
+        $\ruleI
+          {\ioVI{\G;\cdot}{\cdot}{G}}
+          {\ioVI{\G;\D^I}{\D^I}{!G}}
+          {! \: io.6}$}
+      \\&\\
+
+      $\ruleI
+        {\ioVI{\G;\D^I}{\D^O}{[c/x]G}}
+        {\ioVI{\G;\D^I}{\D^O}{\A x. G}}
+        {\A \: io.6^*}$
+      &
+      $\ruleI
+        {\ioVI{\G;\D^I}{\D^O}{[t/x]G}}
+        {\ioVI{\G;\D^I}{\D^O}{\E x. G}}
+        {\E \: io.6}$
+      \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.6}
+    \label{fig:RC_VI}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+
+\newpage
+\section{Resource consumption for LHHF, version 0.6}
+\label{s:RC_VI}
+
+As stated earlier, the resolution calculus presented in the previous section
+does not commit to any strategy in order to split the linear context when
+processing multiplicative goals. As we will see shortly, the kind of
+non-determinism involved in this open choice can be computationally harmful
+unless we devise a sound and complete method to split the linear context.
+Let us state the problem. The resolution rule for the connective $\Times$
+is as follows:
+
+$$\ruleII
+   {\resd{\G;\D_1}{G_1}}
+   {\resd{\G;\D_2}{G_2}}
+   {\resd{\G;\underbrace{\D_1,\D_2}_\D}{G_1 \Times G_2}}
+   {\Times r}
+$$
+   
+In order to solve the goal $G_1 \Times G_2$, we need to split the original
+linear context $\D$ into $\D_1$ and $\D_2$, solve $G_1$ in $\D_1$ and $G_2$ in
+$\D_2$.  Assume that $\D$ contains $n$ formulas. Then there are $2^n$
+possible splits.  Guessing the right one will require to try them all, in the
+worst case.  This is clearly a major efficiency problem: a language based on
+a generate-and-test implementation of this kind could be used for toy
+problems, but would never scale up to real applications. This is particularly
+problematic since multiplicative conjunction is frequently needed in practice
+(it is the most common operator in {\em Lolli\/} programs).
+
+This problem was given a deterministic solution by Hodas and Miller in
+\cite{HoM94} in what they called the {\em I/O model\/} of execution for
+{\em Lolli}. We will instead use the name {\em resource consumption system\/}
+and label this deduction system as {\em version 0.6\/} since we will come up
+with several other versions of this calculus.
+  
+The rule above, {\bf $\Times$ r}, attempts to split the context $\D$ at a
+stage when the resources needed to prove the two subgoals $G_1$ and $G_2$ are
+completely unknown. There is no way of splitting $\D$ correctly until we have
+solved $G_1$ and $G_2$. However, if the original goal is to succeed, all
+resources not used to prove $G_1$ will be used to solve $G_2$, and vice
+versa.  The key idea behind the resource consumption model is, therefore, to
+upgrade the passive role of goal formulas as {\em resource users\/} to the
+more active role of {\em resource consumers}. Under this view, we will give
+one of the subgoals, $G_1$ say, the whole linear context $\D$, it will
+consume part of it and return the remaining context $\D_2$ that will be
+used by $G_2$.
+  
+This basic idea is formalized by means of judgments of the form
+$\ioVI{\G;\D^I}{\D^O}{G}$, where $\D^I$ is the linear part of the context
+that is given as {\em input\/} in order to solve $G$. In general, $G$ will be
+just one of the subgoals produced during the derivation a top-level goal $A$.
+The proof of $G$ will consume part of $\D^I$ and return the portion it did
+not use as the {\em output context\/} $\D^O$, that will be consumed by some
+other subgoal derived from $A$. Clearly the output context for the original
+goal $A$ should be empty.  Indeed, the soundness and completeness theorem for
+resource consumption states that $\resd{\G;\D}{G}$ is derivable if and
+only if $\ioVI{\G;\D}{\cdot}{G}$ is derivable, where $\cdot$ represents
+the empty context. An important invariant of this proof system, as well as
+the variants that will be displayed in the subsequent, is that, when the
+judgment $\ioVI{\G;\D^I}{\D^O}{G}$ is derivable, the output context $\D^O$ is
+always a submultiset of the input context $\D^I$.
+
+In their original paper \cite{HoM94}, Hodas and Miller write this judgment
+$I\{G\}O$, with $G$, $I$ and $O$ being the goal formula, the input and the
+output context respectively. The main difference with respect to our judgment
+is that $I$ and $O$ are lists of items that can be either program formulas or
+the special constant {\tt del}. This is very close to the original {\em ML\/}
+implementation of {\em Lolli}. Our $\D^I$ and $\D^O$ are instead multisets of
+formulas. This is consistent with the resolution judgment presented in \S
+\ref{s:Resolution}, and permits easier proofs of soundness and completeness.
+
+We will now go through the rules in figure \ref{fig:RC_VI} and explain how
+the context management scheme outlined above is concretely realized, and what
+the impact it has on the non-multiplicative rules. First consider the rule that
+deals with multiplicative conjunction, reported below:
+
+$$\ruleII
+  {\ioVI{\G;\D^I}{\D'}{G_1}}
+  {\ioVI{\G;\D'}{\D^O}{G_2}}
+  {\ioVI{\G;\D^I}{\D^O}{G_1 \Times G_2}}
+  {\Times io.6}
+$$
+
+\noindent
+The input context in the conclusion of the rule, $\D^I$, is passed entirely
+to the left premiss in order to solve $G_1$. This computation will consume
+part of $\D^I$ and return the rest as the output context $\D'$, that will be
+piped over to the right premiss in order to solve $G_2$. This goal will in
+turn return an output context $\D^O$ that corresponds to the output context
+of the overall goal $G_1 \Times G_2$. There are two remarks to make at this
+point: first, when considering the judgment $\ioVI{\G;\D^I}{\D^O}{G}$, we are
+adopting a computational point of view according to which the schematic
+variables $\G$, $\D^I$ and $G$ are given as input to the rules while $\D^O$
+is returned as an output value from the resolution of the goal.  Second this
+vision imposes to solve first the left subgoal and then the right branch in
+rule {\bf $\Times$ io.6}.
+
+Most of the remaining rules, {\bf $\A$ io.6} for instance, do not have a
+local effect on the linear context.  Therefore, in order to solve the goal
+formula in their conclusion, $\A x. G$ say, they simply take whatever input
+context $\D^I$ they are provided with and forward it as such to their premiss
+to solve the subgoal, $[c/x]G$ in this case. This computation will produce an
+output context $\D^O$ that is returned as the result of the overall
+computation performed by the rule. Other rules with this property are {\bf
+  !d/io.6}, {\bf $\Plus_i$ io.6}, {\bf $\Imp$ io.6} and {\bf $\E$ io.6}.
+
+When selecting a program formula $D$ from the linear input context (rule {\bf
+  d/io.6}) in order to solve an atomic goal $a$, we need to retract $D$ from
+the input context $\D^I$ that we pass over in order to solve the goal $G$
+obtained by decomposing $D$ with respect to $a$. Indeed, since $D$ has been
+consumed during this process, it must not be available to the resolution of
+$G$, nor of any successive goal. Notice that $\D^O$ cannot contain $D$ (or
+better the instance of $D$ used by the rule) since it has been cancelled from
+$\D^I$. Therefore successive subgoals, which will use $\D^O$ cannot access
+it. No such devices are needed in case the selected formula is intuitionistic
+(rule {\bf !d/io.6}).
+
+The resolution rules for the equality test ({\bf I io.6}) and for the
+multiplicative unit ({\bf $\One$ io.6}) require an empty linear context.
+Therefore, solving these goals does not consume resources. We model this
+behavior by returning as output the same context these rules received as
+input. The case of the connective $\Top$ (rule {\bf $\Top$ io.6}) is
+different: it is allowed to consume a portion $\D$ of its input context
+$\D^I$. If we write the latter as $\D,\D^O$, the output context returned by
+this rule is $\D^O$.
+
+The operational behavior of additive conjunction $\With$ requires to solve
+both subgoals $G_1$ and $G_2$ in the same linear context. This is modelled in
+our resource consumption system by giving the original input context to both
+$G_1$ and $G_2$, and expecting them to return the same output context,
+$\D^O$, that will be the output context of the original formula $G_1 \With
+G_2$. This behavior is caught in rule {\bf $\With$ io.6}.
+
+The rule for multiplicative implication, {\bf $\Lolli$ io.6}, requires some
+attention. Let $\D^I$ be the original input context. In order to process this
+connective, we need to augment $\D^I$ with the antecedent $D$ of the
+implication. Let $\D^O$ be the context returned after solving its consequent
+$G$. We could pass $\D^O$ over as the result of the resolution of $D \Lolli
+G$ if we were sure that $D$ does not appear in $\D^O$. Indeed, $D$ must have
+been consumed during the resolution of $G$. We enforce this constraint by
+writing $\D^I$ as $\D,\D^O$ and passing $\D,D,\D^O$ as the input context to
+the premiss of the rule, where $\D,D$ represents the portion of the input
+context that will be consumed while solving $G$. The rule dealing with
+intuitionistic implication {\bf $\Imp$ io.6} is not concerned with this
+problems.
+
+Finally, rule {\bf $!$ io.6} describes how to solve a banged goal. Since this
+connective requires it subgoal to hold in the empty linear context, we return
+the whole input context as output. Moreover, we prove this subgoal with the
+empty linear context, and, of course, expect the empty linear context as
+output.
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|cc|}
+      \hline &\\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVII{\G;\D^I}{\D^O}{G}{v}}
+        {\ioVII{\fb{\G;\D^I,D}{1}}{\D^O}{a}{v}}
+        {d/io.7}$
+      &
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVII{\G,D;\D^I}{\D^O}{G}{v}}
+        {\ioVII{\fb{\G,D;\D^I}{1}}{\D^O}{a}{v}}
+        {!d/io.7}$
+      \\&\\
+      \multicolumn{2}{|c|}{
+        $\ruleI
+          {}
+          {\ioVII{\G;\D^I}{\D^I}{\eq{a}{a}}{0}}
+          {I \: io.7}$}
+      \\&\\
+
+      $\ruleI
+        {}
+        {\ioVII{\G;\D^I}{\D^I}{\Top}{1}}
+        {\Top \: io.7}$
+      &
+      $\ruleI
+        {}
+        {\ioVII{\G;\D^I}{\D^I}{\One}{0}}
+        {\One \: io.7}$
+      \\&\\&\\
+      \multicolumn{2}{|c|}{
+        $\left\{
+          \begin{array}{c}
+            \ruleII
+              {\ioVII{\G;\D^I}{\D^O}{G_1}{0}}
+              {\ioVII{\G;\D^I}{\D^O}{G_2}{0}}
+              {\ioVII{\G;\D^I}{\fb{\D^O}{2}}{G_1 \With G_2}{0}}
+              {\With_1 io.7}
+          \\ \\
+            \ruleII
+              {\ioVII{\G;\D^I}{\D_1,\D^O}{G_1}{1}}
+              {\ioVII{\G;\D^I}{\D^O}{G_2}{0}}
+              {\ioVII{\G;\D^I}{\fb{\D^O}{3}}{G_1 \With G_2}{0}}
+              {\With_2 io.7}
+          \\ \\
+            \ruleII
+              {\ioVII{\G;\D^I}{\D^O}{G_1}{0}}
+              {\ioVII{\G;\D^I}{\D_2,\D^O}{G_2}{1}}
+              {\ioVII{\G;\D^I}{\fb{\D^O}{3}}{G_1 \With G_2}{0}}
+              {\With_3 io.7}
+          \\ \\
+            \ruleII
+              {\ioVII{\G;\D^I}{\D^O_1}{G_1}{1}}
+              {\ioVII{\G;\D^I}{\D^O_2}{G_2}{1}}
+              {\ioVII{\G;\D^I}{\fb{\D^O_1 \cap \D^O_2}{4}}{G_1 \With G_2}{1}}
+              {\With_4 io.7}
+          \end{array}
+        \right\}$}
+      \\&\\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.7}
+    \label{fig:RC_VII1}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^1$ {\tt pick\_resource}
+
+$^2$ {\tt equalprog}
+
+$^3$ {\tt subcontext}
+
+$^4$ {\tt context\_intersection}
+
+$^5$ {\tt d\_scan}
+
+$^6$ {\tt d\_thinnable}
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|cc|}
+      \hline &\\
+      \multicolumn{2}{|c|}{
+        $\ruleII
+          {\ioVII{\G;\D^I}{\D'}{G_1}{v_1}}
+          {\ioVII{\G;\D'}{\D^O}{G_2}{v_2}}
+          {\ioVII{\G;\D^I}{\D^O}{G_1 \Times G_2}{v_1 \vee v_2}}
+          {\Times io.7}$}
+      \\&\\&\\
+
+      $\left\{
+        \begin{array}{c}
+          \ruleI
+            {\ioVII{\G;\D^I}{\D^O}{G_1}{v}}
+            {\ioVII{\G;\D^I}{\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_1 io.7}
+        \\ \\
+          \ruleI
+            {\ioVII{\G;\D^I}{\D^O}{G_2}{v}}
+            {\ioVII{\G;\D^I}{\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_2 io.7}
+        \end{array}
+      \right\}$
+      &
+      $\left\{
+        \begin{array}{c}
+          \ruleI
+            {\ioVII{\fb{\G;\D^O,\D,D}{5}}{\D^O}{G}{0}}
+            {\ioVII{\G;\D^O,\D}{\fb{\D^O}{6}}{D \Lolli G}{0}}
+            {\Lolli_1 io.7}
+        \\ \\
+          \ruleI
+            {\ioVII{\fb{\G;\D^I,D}{5}}{\D^O}{G}{1}}
+            {\ioVII{\G;\D^I}{\D^I \cap \D^O}{D \Lolli G}{1}}
+            {\Lolli_2 io.7}
+        \end{array}
+      \right\}$
+      \\&\\&\\
+
+      $\ruleI
+        {\ioVII{\fb{\G,D;\D^I}{5}}{\D^O}{G}{v}}
+        {\ioVII{\G;\D^I}{\D^O}{D \Imp G}{v}}
+        {\Imp \: io.7}$
+      &
+      $\ruleI
+        {\ioVII{\G;\D^I}{\D^I}{G}{v}}
+        {\ioVII{\G;\D^I}{\fb{\D^I}{2}}{!G}{0}}
+        {! \: io.7}$
+      \\&\\&\\
+
+      $\ruleI
+        {\ioVII{\G;\D^I}{\D^O}{[c/x]G}{v}}
+        {\ioVII{\G;\D^I}{\D^O}{\A x. G}{v}}
+        {\A \: io.7^*}$
+      &
+      $\ruleI
+        {\ioVII{\G;\D^I}{\D^O}{[t/x]G}{v}}
+        {\ioVII{\G;\D^I}{\D^O}{\E x. G}{v}}
+        {\E \: io.7}$
+      \\&\\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.7 (Continued)}
+    \label{fig:RC_VII2}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+
+
+\newpage
+\section{Resource consumption for LHHF,  version 0.7}
+\label{s:RC_VII}
+
+The context management policy enforced by the system presented in section
+\ref{s:RC_VI} is not fully deterministic yet. This is due to the operational
+semantics of the logical constant $\Top$. As presented in rule {\bf $\Top$
+  io.6}, this goal is allowed to consume any portion $\D$ of its input
+context $\D^I$. If $\D^I$ contains $n$ formulas, we are still left with $2^n$
+possible output contexts $\D^O$ to be passed to the remaining computation.
+Hodas and Miller \cite{HoM94} have provided a variant of their I/O model that
+takes care of this problem. We report their solution using our notation in
+figures \ref{fig:RC_VII1} and \ref{fig:RC_VII2}. We use the name {\em version
+  0.7\/} for the resulting rule set. The original {\em ML\/} implementation
+by Josh Hodas was based on this system. We provide hooks to the code by
+framing parts of the context which management requires calling specialized
+functions. The names of these functions are given as footnotes.
+
+Roughly, the idea is that once a $\Top$ has been encountered, the remaining
+subgoals do not need to consume all of the input context since the unused
+formulas could be ``pumped back'' to the place in the proof tree where $\Top$
+was first seen. We obtain this behavior by adding an extra parameter to the
+resource consumption judgment of version 0.6: we now rely on judgments of the
+form $\ioVII{\G;\D^I}{\D^O}{G}{v}$ where $v$ is a boolean flag (the {\em
+  $\Top$-flag\/} or {\em slack indicator\/}) to be considered as another
+output argument of the resolution of the goal $G$. Whenever $v = 0$, the
+resolution of $G$ uses exactly the resources in $\D^I - \D^O$. If instead
+this flag has value $1$, $G$ uses $\D^I - \D^O$ for sure, but may absorb also
+part or all of the output context $\D^O$. In this case, we say that $\D^O$ is
+the {\em slack\/} of that branch of the proof tree.  When $v = 0$, the
+computation has no slack. The resulting deduction system, labelled version
+0.7, is presented in figures \ref{fig:RC_VII1} and \ref{fig:RC_VII2}.
+
+The main changes with respect to the previous system concern the rules that
+close the proof trees and the binary rules. Rules {\bf I io.7} and {\bf
+  $\One$ io.7} pass their linear context as the output context for the
+remainder of the computation. These rules set the $\Top$-flag to $0$ since no
+occurrence of $\Top$ can have been encountered during the proof of either
+$\One$ or the identity test. When this connective is processed as a goal, it
+passes its input context as output, but raises the $\Top$-flag.  The
+subsequent computation will use this information for context management.
+
+Rule {\bf $\With$ io.6} is split into four rules ({\bf $\With_i$ io.7} with
+$i$ ranging from $1$ to $4$) according to the status of the $\Top$-flags
+returned by its two premisses. If no $\Top$ was encountered while solving
+either $G_1$ nor $G_2$ (rule {\bf $\With_1$ io.7}), then the context is
+managed as in the previous system and the $\Top$-flag for $G_1 \With G_2$ is
+set to $0$. If exactly one of the two premisses sets the $\Top$-flag (rules
+{\bf $\With_2$ io.7} and {\bf $\With_3$ io.7}), then the behavior of the rule
+is determined by the other premiss. Consider the first of these rule, for
+instance, and let $\D$ be the portion of the context used while proving $G_2$
+(clearly, $\D^I = \D,\D^O$). Since both $G_1$ and $G_2$ must consume the same
+portion of the context, the proof of $G_1$ can use part of $\D$ but no
+formula from $\D^O$. Since a $\Top$ has been encountered, it could indeed use
+a proper submultiset of $\D$. We enforce this constraint by writing the
+output context of $G_1$ as $\D_1,\D^O$, where $\D_1$ is the actual slack of
+this branch of the proof tree. The $\Top$-flag for $G_1 \With G_2$ is set to
+zero: since both premisses must consume the same resources and $G_2$ has no
+slack, the composed goal cannot have any slack. For a similar reason, the
+output context of $G_1 \With G_2$ is $\D^O$. In the case both premisses
+return their $\Top$-flag set (rule {\bf $\With_4$ io.7}), both subgoal allow
+arbitrary slack. Therefore, we set the $\Top$-flag for the composed formula
+since in this case exuberant resources can be ``pumped back'' to both
+premisses. The resulting output context is the intersection of the linear
+contexts returned by the premisses: since both branches are constrained to
+consume the same resources, only what is not used in either can be forwarded.
+
+Slack handling in the rule for multiplicative conjunction (rule {\bf $\Times$
+  io.7}) is quite simple since resources are allowed to flow freely from one
+premiss to the other. We set the $\Top$-flag if either subgoal allows slack.
+Moreover, the overall output context is simply the linear context returned
+after proving the right premiss.
+
+The two rules for linear implication ({\bf $\Lolli_1$ io.7} and {\bf
+  $\Lolli_2$ io.7}) are a specialization of rule {\bf $\Lolli$ io.6}. In case
+the $\Top$-flag is not set, we essentially proceed as in system 0.6.
+Otherwise, the possibility of having slack saves us from the duty of checking
+that the formula $D$ has been consumed in rule {\bf $\Lolli_2$ io.7} while
+proving the goal $G$: if it has not, it will be part of the slack, but it
+must not be accessible to the rest of the computation. This is the reason why
+we take the intersection between the original input context and the output
+context returned by $G$. In the concrete implementation, this is handled by
+pattern matching, so no function call is needed in this case.
+
+Finally, the rule for $!$, {\bf $!$ io.7}, resets the $\Top$-flag
+independently of whether $\Top$ has been encountered while solving the
+subgoal $G$ or not. Since the output context coincides with the input context
+in this rule, there is no place for any slack. This rule reflects the actual
+implementation: instead of calling $G$ with an empty linear context, the
+input context is forwarded to this goal, and the returned context is checked
+for equality against it. This operational behavior fits better the Hodas's
+implementation strategy than using the empty input context, as illustrated in
+rule {\bf $!$ io.6}.
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|c|}
+      \hline &\\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVIII{\G;\D^I}{\D^O}{G}{v}}
+        {\ioVIII{\fb{\G;\D^I,D}{1}}{\D^O}{a}{v}}
+        {d/io.8}$
+      &
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVIIIa{\G;\D}{G}}
+        {\ioVIIIa{\fb{\G;\D,D}{1}}{a}}
+        {d/io.8'}$
+      \\&\\&\\
+
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVIII{\G,D;\D^I}{\D^O}{G}{v}}
+        {\ioVIII{\fb{\G,D;\D^I}{1}}{\D^O}{a}{v}}
+        {!d/io.8}$
+      &
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioVIIIa{\G,D;\D}{G}}
+        {\ioVIIIa{\fb{\G,D;\D}{1}}{a}}
+        {!d/io.8'}$
+      \\&\\
+
+      $\ruleI
+        {}
+        {\ioVIII{\G;\D^I}{\D^I}{\eq{a}{a}}{0}}
+        {I \: io.8}$
+      &
+      $\ruleI
+        {}
+        {\ioVIIIa{\fb{\G;\cdot}{2}}{\eq{a}{a}}}
+        {I \: io.8'}$
+      \\&\\
+
+      $\ruleI
+        {}
+        {\ioVIII{\G;\D^I}{\D^I}{\One}{0}}
+        {\One \: io.8}$
+      &
+      $\ruleI
+        {}
+        {\ioVIIIa{\fb{\G;\cdot}{2}}{\One}}
+        {\One \: io.8'}$
+      \\&\\
+
+      $\ruleI
+        {}
+        {\ioVIII{\G;\D^I}{\D^I}{\Top}{1}}
+        {\Top \: io.8}$
+      &
+      $\ruleI
+        {}
+        {\ioVIIIa{\G;\D}{\Top}}
+        {\Top \: io.8'}$
+      \\&\\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.8}
+    \label{fig:RC_VIII1}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^1$ {\tt pick\_resource}
+
+$^2$ {\tt consumed}
+
+$^3$ {\tt complement}
+
+$^4$ {\tt subset}
+
+$^5$ {\tt intersect}
+
+$^6$ {\tt d\_scan}
+
+$^7$ {\tt erase}
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|c|}
+      \hline
+      \multicolumn{2}{|c|}{} \\
+      \multicolumn{2}{|c|}{
+        $\begin{array}{c}
+          \left\{
+            \begin{array}{c}
+              \ruleII
+                {\ioVIII{\G;\D,\D^O}{\D^O}{G_1}{0}}
+                {\ioVIIIa{\fb{\G;\D}{3}}{G_2}}
+                {\ioVIII{\G;\D,\D^O}{\D^O}{G_1 \With G_2}{0}}
+                {\With_1 io.8}
+            \\ \\
+              \ruleII
+                {\ioVIII{\G;\D^I}{\D_1,\D^O}{G_1}{1}}
+                {\ioVIII{\G;\D^I}{\D^O}{G_2}{0}}
+                {\ioVIII{\G;\D^I}{\fb{\D^O}{4}}{G_1 \With G_2}{0}}
+                {\With_2 io.8}
+            \\ \\
+              \ruleII
+                {\ioVIII{\G;\D^I}{\D^O_1}{G_1}{1}}
+                {\ioVIII{\G;\D^I}{\D^O_2}{G_2}{1}}
+                {\ioVIII
+                  {\G;\D^I}
+                  {\fb{\D^O_1 \cap \D^O_2}{5}}
+                  {G_1 \With G_2}{1}}
+                {\With_3 io.8}
+            \end{array}
+          \right\}
+        \\ \\
+        \searrow
+        \\ \\
+        \hspace{8em}
+        \ruleII
+          {\ioVIIIa{\G;\D}{G_1}}
+          {\ioVIIIa{\G;\D}{G_2}}
+          {\ioVIIIa{\G;\D}{G_1 \With G_2}}
+          {\With io.8'}
+        \end{array}$} \\
+      \multicolumn{2}{|c|}{} \\
+      \multicolumn{2}{|c|}{} \\
+
+      $\ruleII
+        {\ioVIII{\G;\D^I}{\D'}{G_1}{v_1}}
+        {\ioVIII{\G;\D'}{\D^O}{G_2}{v_2}}
+        {\ioVIII{\G;\D^I}{\D^O}{G_1 \Times G_2}{v_1 \vee v_2}}
+        {\Times io.8}$
+      &
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioVIII{\G;\D}{\D'}{G_1}{0}}
+            {\ioVIIIa{\G;\D'}{G_2}}
+            {\ioVIIIa{\G;\D}{G_1 \Times G_2}}
+            {\Times_1 io.8'}
+        \\ \\
+          \ruleII
+            {\ioVIII{\G;\D}{\D'}{G_1}{1}}
+            {\ioVIII{\G;\D'}{\D''}{G_2}{v}}
+            {\ioVIIIa{\G;\D}{G_1 \Times G_2}}
+            {\Times_2 io.8'}
+        \end{array}
+      \right\}$
+      \\&\\&\\
+
+      $\left\{
+        \begin{array}{c}
+          \ruleI
+            {\ioVIII{\G;\D^I}{\D^O}{G_1}{v}}
+            {\ioVIII{\G;\D^I}{\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_1 io.8}
+        \\ \\
+          \ruleI
+            {\ioVIII{\G;\D^I}{\D^O}{G_2}{v}}
+            {\ioVIII{\G;\D^I}{\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_2 io}
+        \end{array}
+      \right\}$
+      &
+      $\left\{
+        \begin{array}{c}
+          \ruleI
+            {\ioVIIIa{\G;\D}{G_1}}
+            {\ioVIIIa{\G;\D}{G_1 \Plus G_2}}
+            {\Plus_1 io.8'}
+        \\ \\
+          \ruleI
+            {\ioVIIIa{\G;\D}{G_2}}
+            {\ioVIIIa{\G;\D}{G_1 \Plus G_2}}
+            {\Plus_2 io.8'}
+        \end{array}
+      \right\}$
+      \\&\\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.8 (Continued)}
+    \label{fig:RC_VIII2}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|c|}
+      \hline &\\
+
+      $\left\{
+        \begin{array}{c}
+          \ruleI
+            {\ioVIII{\fb{\G;\D,\D^O,D}{6}}{\D^O}{G}{0}}
+            {\ioVIII{\G;\D,\D^O}{\D^O}{D \Lolli G}{0}}
+            {\Lolli_1 io.8}
+        \\ \\
+          \ruleI
+            {\ioVIII{\fb{\G;\D^I,D}{6}}{\D^O}{G}{1}}
+            {\ioVIII{\G;\D^I}{\fb{\D^I \cap \D^O}{2}}{D \Lolli G}{1}}
+            {\Lolli_2 io.8}
+        \end{array}
+      \right\}$
+      &
+      $\ruleI
+        {\ioVIIIa{\fb{\G;\D,D}{6}}{G}}
+        {\ioVIIIa{\G;\D}{D \Lolli G}}
+        {\Lolli io.8'}$
+      \\&\\&\\
+
+      $\ruleI
+        {\ioVIII{\fb{\G,D;\D^I}{6}}{\D^O}{G}{v}}
+        {\ioVIII{\G;\D^I}{\D^O}{D \Imp G}{v}}
+        {\Imp io.8}$
+      &
+      $\ruleI
+        {\ioVIIIa{\fb{\G,D;\D}{6}}{G}}
+        {\ioVIIIa{\G;\D}{D \Imp G}}
+        {\Imp io.8'}$
+      \\&\\&\\
+
+      $\ruleI
+        {\ioVIIIa{\fb{\G;\cdot}{7}}{G}}
+        {\ioVIII{\G;\D^I}{\D^I}{!G}{0}}
+        {! \: io.8}$
+      &
+      $\ruleI
+        {\ioVIIIa{\G;\cdot}{G}}
+        {\ioVIIIa{\fb{\G;\cdot}{2}}{!G}}
+        {! \: io.8'}$
+      \\&\\&\\
+
+      $\ruleI
+        {\ioVIII{\G;\D^I}{\D^O}{[c/x]G}{v}}
+        {\ioVIII{\G;\D^I}{\D^O}{\A x. G}{v}}
+        {\A \: io.8^*}$
+      &
+      $\ruleI
+        {\ioVIIIa{\G;\D}{[c/x]G}}
+        {\ioVIIIa{\G;\D}{\A x. G}}
+        {\A \: io.8'^*}$
+      \\&\\&\\
+
+      $\ruleI
+        {\ioVIII{\G;\D^I}{\D^O}{[t/x]G}{v}}
+        {\ioVIII{\G;\D^I}{\D^O}{\E x. G}{v}}
+        {\E \: io.8}$
+      &
+      $\ruleI
+        {\ioVIIIa{\G;\D}{[t/x]G}}
+        {\ioVIIIa{\G;\D}{\E x. G}}
+        {\E \: io.8'}$
+      \\&\\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.8 (Continued)}
+    \label{fig:RC_VIII3}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+
+\newpage
+\section{Resource consumption for LHHF, version 0.8}
+\label{s:RC_VIII}
+
+Version 0.7 of the resource consumption model, presented in \S
+\ref{s:RC_VII}, achieves determinism in context management. A close
+examination of the rules reveals that some efficiency and completeness
+problems still remain. In particular, the rules concerning $\With$ are
+unsatisfactory. The problems already appears in version 0.6. We had the
+following rule:
+
+$$
+\ruleII
+  {\ioVI{\G;\D^I}{\D^O}{G_1}}
+  {\ioVI{\G;\D^I}{\D^O}{G_2}}
+  {\ioVI{\G;\D^I}{\D^O}{G_1 \With G_2}}
+  {\With io.6}
+$$
+
+\noindent
+Assuming a sequential execution order for the two premisses, this rules
+requires to solve first $G_1$, say, obtaining an output context $\D^O_1$.
+Then $G_2$ will be proved and return the output context $\D^O_2$.
+Operationally, at this point, and only at this point we check that $\D^O_1$
+and $\D^O_2$ are equal. In principle this test can be done efficiently (for
+example by having a bit vector where each position records whether the
+corresponding resource has been used). Assume however a situation where the
+proof of $G_2$ attempts to use a formula $D$ present in $\D^O_1$ (and there
+are no $\Top$ around to cushion it). The consequent failure could be
+discovered as soon as $D$ is accessed. Our current model postpones
+recognizing this situation until $G_2$ has been completely solved. In a
+computation model based on backtracking, early identifications of illegal
+uses of resources of the kind described above are highly beneficial: after
+$D$ has been accessed, the resolution of $G_2$ may involve heavy computations
+that might be completely avoided (efficiency issue); moreover, this
+computation might be diverging (completeness issue).
+
+Consider the following example, written using {\em Lolli\/}'s concrete
+syntax:
+
+\medskip
+
+{\tt \hspace*{2em} \indent test :- (a \& b), c.\rule[-2ex]{0ex}{1ex}}
+
+{\tt \hspace*{2em} \indent a.\rule[-2ex]{0ex}{1ex}}
+
+{\tt \hspace*{2em} \indent b :- c, write\_sans "I may diverge".\ \ \% Fails}
+
+{\tt \hspace*{2em} \indent b.\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
+  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \% Succeeds\rule[-2ex]{0ex}{1ex}}
+
+{\tt \hspace*{2em} \indent LINEAR c.}
+
+\medskip
+\noindent
+According to the current execution model, the goal `{\tt ?- test}' is solved
+by first proving {\tt a} without consuming any resource, then attempting to
+prove {\tt b}. The first clause for this goal is attempted first and has {\tt
+  b} succeed (the message is printed). Upon returning, the context used for
+solving {\tt a} and {\tt b} are compared and a failure is reported since the
+latter uses {\tt c} while the former does not. This triggers backtracking and
+the second clause for {\tt b} is accessed, making the overall computation to
+succeed eventually. As we said above, we would like the first attempt to
+solve {\tt b} to fail as soon as {\tt c} is accessed (so that the error
+message does not get printed).
+
+In order to recognize early failures due to the fact that the second goal
+incorrectly accesses resources unused by the first, we modify the rule {\bf
+  $\With$ io.6} as follows:
+
+$$
+\ruleII
+  {\ioVI{\G;\D^I}{\D^O}{G_1}}
+  {\ioVI{\G;\D^I-\D^O}{\cdot}{G_2}}
+  {\ioVI{\G;\D^I}{\D^O}{G_1 \With G_2}}
+  {\With io.6'}
+$$
+
+\noindent
+In this rule, we give $G_2$ exactly the portion of the linear context that it
+must use and expect the empty context as an output. In this way, the
+resources not consumed by $G_1$ are inaccessible to $G_2$; this achieves our
+purposes.
+
+{\em Version 0.8\/} of the resource consumption system develops this idea and
+integrates the technique presented in version 0.7 to handle $\Top$. We rely
+on two mutually recursive judgments: $\ioVIII{\G;\D^I}{\D^O}{G}{v}$ and
+$\ioVIIIa{\G;\D}{G}$, called the {\em partial\/} and the {\em total
+  consumption judgment\/} respectively. The first shares the semantics as
+the similar judgment of version 0.7: the goal $G$ is provable from the
+context $\G;\D^I$ returning the linear context $\D^O$ as output, where $v$ is
+the slack indicator. Total consumption behaves like the resolution judgment
+described in \S \ref{s:Resolution}: $G$ is provable in the context $\G;\D$,
+and in particular consumes completely the linear part of the context, $\D$.
+
+Most of the rules for this system, presented in figures \ref{fig:RC_VIII1},
+\ref{fig:RC_VIII2} and \ref{fig:RC_VIII3}, correspond exactly to the
+equivalent rules of either system 0.7 or of the resolution calculus. The two
+judgments communicate in the rules that deal with $\With$, $\Times$ and $!$.
+More precisely, only rules {\bf $\With_1$ io.8}, {\bf $\Times_i$ io.8$'$} and
+{\bf $!$ io.8} introduce new features.
+
+The first of these rules expresses faithfully the idea described above as
+{\bf $\With$ io.6$'$} as soon as we write $\D^I - \D^O$ as $\D$. If the
+resolution of $G_1$ does not allow any slack, then $\D$ must be entirely
+consumed while solving $G_2$, independently of whether $\Top$ is encountered
+or not. We obtain this by using total the consumption judgment. In the
+case solving $G_1$ permits slack, we must behave similarly to version 0.7.
+
+Since the argument of a $!$ must be solved in an empty context (and therefore
+must trivially consume it all), the partial consumption rule dealing with
+this connective ({\bf $!$ io.8}) can take advantage of the total consumption
+judgment.
+
+Rules {\bf $\Times_i$ io.8$'$} describe how to solve a goal of the form $G_1
+\Times G_2$ so that the linear context gets completely consumed. We give the
+whole context to $G_1$ by means of the partial consumption judgment. This
+goal will consume part of it and possibly raise the $\Top$-flag. Depending on
+the returned value for this flag, two courses of action can be taken. If the
+$\Top$-flag is not set, then $G_2$ must consume all the resources discarded
+by $G_1$; total consumption is used for this purpose.  Otherwise, if the
+slack indicator is set, we pass the output context of $G_1$ to $G_2$ as input
+by means of the partial consumption judgment, and discard the resources that
+this goal does not consume (we ignore also the $\Top$-flag returned by this
+branch of the proof tree).
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G}{v}}
+            {\ioIX{\fb{\G;\X;(\D^I,D)}{1}}{\D^O}{a}{v}}
+            {d_1/io.9}
+        &
+          \hspace{0.5em}
+        &
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G}{v}}
+            {\ioIX{\fb{\G;(\X,D);\D^I}{1}}{\D^O}{a}{v}}
+            {d_2/io.9}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioIX{(\G,D);\X;\D^I}{\D^O}{G}{v}}
+        {\ioIX{\fb{(\G,D);\X;\D^I}{1}}{\D^O}{a}{v}}
+        {!d/io.9}$
+
+      \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {}
+          {\ioIX{\fb{\G;\cdot;\D^I}{2}}{\D^I}{\eq{a}{a}}{0}}
+          {I \: io.9}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {}
+          {\ioIX{\fb{\G;\cdot;\D^I}{2}}{\D^I}{\One}{0}}
+          {\One \: io.9}
+      \end{array}$
+
+      \\ \\
+      $\ruleI
+        {}
+        {\ioIX{\fb{\G;\X;\D^I}{3}}{\D^I}{\Top}{1}}
+        {\Top \: io.9}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1}{0}}
+            {\ioIX{\fb{\G;(\X,\D^I-\D^O);\cdot}{4}}{\D^\Bot}{G_2}{v}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1 \With G_2}{0}}
+            {\With_1 io.9}
+        \\ \\
+          \ruleII
+            {\ioIX{\G;\X;\D^I}{\D'}{G_1}{1}}
+            {\ioIX{\fb{\G;(\X,\D^I-\D');\D'}{5}}{\D^O}{G_2}{v}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1 \With G_2}{v}}
+            {\With_2 io.9}
+        \end{array}
+      \right\}$
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.9}
+    \label{fig:RC_IXa1}
+  \end{center}
+\end{figure}
+
+
+\bigskip
+
+$^1$ {\tt pick\_resource}
+
+$^2$ {\tt strict}
+
+$^3$ {\tt erase\_strict}
+
+$^4$ {\tt strict\_difference\_and\_erase}
+
+$^5$ {\tt strict\_difference\_and\_keep}
+
+
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIX{\fb{\G;\cdot;(\X,\D^I)}{6}}{\D'}{G_1}{0}}
+            {\ioIX{\fb{\G;(\X \cap \D');(\D^I \cap \D')}{7}}{\D^O}{G_2}{v}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1 \Times G_2}{v}}
+            {\Times_1 io.9}
+        \\ \\
+          \ruleII
+            {\ioIX{\fb{\G;\cdot;(\X,\D^I)}{6}}{\D'}{G_1}{1}}
+            {\ioIX{\G;\cdot;\D'}{\D^O}{G_2}{v}}
+            {\ioIX{\G;\X;\D^I}{\fb{\D^I \cap \D^O}{8}}{G_1 \Times G_2}{1}}
+            {\Times_2 io.9}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1}{v}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_1 io.9}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_2}{v}}
+            {\ioIX{\G;\X;\D^I}{\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_2 io.9}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIX{\fb{\G;(\X,D);\D^I}{9}}{\D^O}{G}{v}}
+          {\ioIX{\G;\X;\D^I}{\D^O}{D \Lolli G}{v}}
+          {\Lolli io.9}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIX{\fb{(\G,D);\X;\D^I}{9}}{\D^O}{G}{v}}
+          {\ioIX{\G;\X;\D^I}{\D^O}{D \Imp G}{v}}
+          {\Imp io.9}
+      \end{array}$
+
+      \\ \\ \\
+      $\ruleI
+        {\ioIX{\fb{\G;\cdot;\cdot}{10}}{\D^\Bot}{G}{v}}
+        {\ioIX{\fb{\G;\cdot;\D^I}{2}}{\D^I}{!G}{0}}
+        {! \: io.9}$
+
+      \\ \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIX{\G;\X;\D^I}{\D^O}{[c/x]G}{v}}
+          {\ioIX{\G;\X;\D^I}{\D^O}{\A x. G}{v}}
+          {\A \: io.9^*}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIX{\G;\X;\D^I}{\D^O}{[t/x]G}{v}}
+          {\ioIX{\G;\X;\D^I}{\D^O}{\E x. G}{v}}
+          {\E \: io.9}
+      \end{array}$
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.9 (Continued)}
+    \label{fig:RC_IXa2}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^6$ {\tt make\_non\_strict}
+
+$^7$ {\tt intersect\_input}
+
+$^8$ {\tt intersect}
+
+$^9$ {\tt d\_scan}
+
+$^{10}$ {\tt erase}
+
+
+\newpage
+\section{Resource consumption for LHHF,  version 0.9}
+\label{s:RC_IXa}
+
+Version 0.8 of the proof system forbids the right branch of the rules for
+$\With$ to access resources that the left branch spared. However, it does
+not force the right branch to consume all the resources used in the left part
+of the proof tree, at least not at an early enough stage. Consider the
+following examples that shows the problem in the presence of nested
+occurrences of $\With$.
+
+\medskip
+
+{\tt \hspace*{2em} \indent test :- ((a,erase) \& b), d.\rule[-2ex]{0ex}{1ex}}
+
+{\tt \hspace*{2em} \indent LINEAR a.}
+
+{\tt \hspace*{2em} \indent LINEAR c.}
+
+{\tt \hspace*{2em} \indent LINEAR d.\rule[-2ex]{0ex}{1ex}}
+
+{\tt \hspace*{2em} \indent b :- c  \& (write\_sans "I may diverge", a).
+  \ \ \% Fails}
+
+{\tt \hspace*{2em} \indent b :- a, c.\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
+  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \% Succeeds\rule[-2ex]{0ex}{1ex}}
+
+\medskip
+\noindent
+We will rely on the abstract syntax of our proof systems to describe the
+computation originating from the resolution of the query {\tt ?- test}.
+Specifically, let $\G$ consist of the two clauses for $b$ and of the
+definition of {\em test}, and $W$ represent the output subgoal, logically
+equivalent to $\One$. After one application of rule {\bf d/io.8$'$}, we are
+reduced to solving $\ioVIIIa{\G;a,c,d}{((a \Times \Top) \With b) \Times d}$.
+We do not know yet which of the total consumption rules for the tensor to
+use, but both require to solve the partial consumption judgment
+$\ioVIII{\G;a,c,d}{\D^O_1}{(a \Times \Top) \With b}{v_1}$ for still unknown
+values of $\D^O_1$ and $v_1$.  At this point the rules for $\With$ look for a
+proof of $\ioVIII{\G;a,c,d}{\D^O_2}{a \Times \Top}{v_2}$. It is easy to
+verify that this proof succeeds with $\D^O_2 = c,d$ and $v_2 = 1$. Therefore,
+the computation proceeds with either rule {\bf $\With_2$ io.8} or {\bf
+  $\With_3$ io.8}, and the goal $\ioVIII{\G;a,c,d}{\D^O_3}{b}{v_3}$. Notice
+at this point that this branch of the proof tree must consume $a$ for the
+goal $(a \Times \Top) \With b$ to succeed, but nothing in this judgment
+enforces this behavior explicitly; this will cause a failure to be detected
+only very late. The first clause for $b$ will be attempted, reducing this
+goal to that of proving $\ioVIII{\G;a,c,d}{\D^O_3}{c \With (W \Times
+  a)}{v_3}$. The rules for $\With$ reduce this judgment to the goal
+$\ioVIII{\G;a,c,d}{\D^O_4}{c}{v_4}$ which succeeds with $D^O_4 = a,d$ and
+$v_4 = 0$. Notice that $a$ has not been consumed while solving $c$, but the
+computation is allowed to proceed, and it does so by solving
+$\ioVIIIa{\G;c}{W \Times a}$ which clearly fails but only after having
+executed $W$, i.e.\ printing the message. At this point, backtracking occurs
+and the second clause for $b$ is attempted. An easy simulation shows that his
+attempt succeeds.
+
+This behavior is not satisfactory. In this example $a$ is a resource that
+must be consumed while solving the goal $b$ while the other linear resources
+available, $c$ and $d$, might be consumed while proving this goal, but do not
+have to. Instead, our current system passes all these resources
+indiscriminately to $b$ as its input linear context.
+
+We obtain the desired behavior in version 0.9 of the resource management
+system by considering a judgment of the form $\ioIX{\G;\X;\D^I}{\D^O}{G}{v}$.
+The input linear context is logically subdivided into two parts: the {\em
+  strict\/} context $\X$ that must be consumed during the resolution of the
+goal $G$, and the {\em non-strict\/} context $\D^I$ which contents might be
+consumed while solving $G$; whatever portion of $\D^I$ is not used for this
+purpose is returned as the output context $\D^O$. This unique relation
+captures the semantics of both the partial and the total consumption judgment
+of system 0.8. Indeed the strict context is treated as the linear context of
+total consumption, while the non-strict context is managed similarly to the
+input context of the partial consumption rules.
+
+The rules defining the semantics of this judgment are represented in figure
+\ref{fig:RC_IXa1} and \ref{fig:RC_IXa2}. We will now briefly describe their
+principal characteristics.
+
+Since we have split the linear context, we need to provide two rules for
+accessing a linear formula when the goal is atomic. These are rules {\bf
+  d$_1$/io.9} and {\bf d$_2$/io.9}. Rules {\bf I io.9} and {\bf $\One$ io.9}
+are straightforward: the strict context must be empty while solving them
+while the non-strict context is passed over as output; notice that applying
+these rules forces us to check that the strict context is empty. The rule for
+$\Top$ ({\bf $\Top$ io.9}) deletes whatever portion of the strict context it
+is provided with, and forwards as output its non-strict context.
+
+The rules for $\With$ are more interesting. In order to solve the goal $G_1
+\With G_2$ with respect to the linear context $\X;\D^I$, we first solve $G_1$
+in $\X;\D^I$, obtaining the output context $\D^O$, and then we can take two
+different courses of action depending on the value of the slack indicator. If
+no slack is available (rule {\bf $\With_1$ io.9}), $G_2$ must consume
+everything that has been used by $G_1$, i.e.\ $\X$ as well as $\D^I - \D^O$.
+These two components are packed into the strict context of $G_2$.  Since this
+goal is not allowed to consume any other resources, it is given an empty
+non-strict context. The output context must clearly be empty ($\cdot$).  We
+use the superscript $^\bot$ to indicate entities which value is either
+trivial or has to be ignored; we use instead exact values, such as $\cdot$ to
+indicate that a test has to be performed to verify that the entity has this
+value (see rule {\bf I io.9} for instance). If the resolution of $G_1$ has
+encountered an occurrence of $\Top$ and slack is admitted (rule {\bf
+  $\With_2$ io.9}), $G_2$ must still consume every resource used by $G_1$
+(i.e.\ $\X,\D^I - \D'$), but is also allowed to access the resources not used
+by this goal ($\D'$), therefore, we give them as the non-strict context of
+$G_2$. The output context of this goal is the output context of the overall
+computation.
+
+When solving a goal of the form $G_1 \Times G_2$, the strict context $\X$
+must be consumed by either $G_1$ or $G_2$. Since the first of these subgoals
+may use an arbitrary part of $\X$ as well as some portion of the non-strict
+context $\D^I$, we put both $\X$ and $\D^I$ in the non-strict context of
+$G_1$ and leave the strict context empty. Again how to solve $G_2$ depends on
+the value of the $\Top$-flag. If no slack is allowed (rule {\bf $\Times_1$
+  io.9}), $G_2$ must consume whatever portion of $\X$ $G_1$ did not use, and
+possibly some formulas in $\D^I$ that this goal did not access. Therefore, we
+need to restore the remaining parts of $\X$ and $\D^I$ as the strict an
+non-strict context of $G_2$ respectively. We intersect these multisets with
+the output context $\D'$ of $G_1$ to prevent $G_2$ to access used resources.
+If the slack indicator was set by $G_1$ (rule {\bf $\Times_2$ io.9}, all the
+strict resources in the original $\X$ can be pumped back to $G_1$ in the case
+$G_2$ does not use them. Therefore we call this goal with an empty strict
+context and the output context of $G_1$, $\D'$ as its non-strict context. We
+must be careful, however, not to return strict resources from $\X$ as the
+output context of $G_1 \Times G_2$, therefore we intersect the context
+returned by $G_2$ with the original input context $\D^I$ of the composed
+goal.
+
+The rule dealing with linear implication ({\bf $\Lolli$ io.9}) provides a
+reasonable solution to the management of the consequent of a goal of the form
+$D \Lolli G$. Since $D$ has to be used while proving $G$, we simply put it
+into the strict context of this subgoal. In this way we avoid complex
+operations depending on the value of the slack indicator.
+
+Finally, the rule for $!$ ({\bf $!$ io.9}) expects an empty strict context
+and has its subgoal solved in a non-strict context that should be empty as
+well. The original non-strict context is returned as output.
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G}{v}{s}}
+            {\ioIXb{\fb{\G;\X;(\D^I,D)}{1}}{\D^O}{a}{v}{s}}
+            {d_1/io.91}
+        &
+          \hspace{0.5em}
+        &
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G}{v}{1}}
+            {\ioIXb{\fb{\G;(\X,D);\D^I}{1}}{\D^O}{a}{v}{s}}
+            {d_2/io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioIXb{(\G,D);\X;\D^I}{\D^O}{G}{v}{s}}
+        {\ioIXb{\fb{(\G,D);\X;\D^I}{1}}{\D^O}{a}{v}{s}}
+        {!d/io.91}$
+
+      \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {}
+            {\ioIXb{\G;\X^\Bot;\D^I}{\D^I}{\eq{a}{a}}{0}{0}}
+            {I_1 \: io.91}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {}
+            {\ioIXb{\fb{\G;\cdot;\D^I}{2}}{\D^I}{\eq{a}{a}}{0}{1}}
+            {I_2 \: io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {}
+            {\ioIXb{\G;\X^\Bot;\D^I}{\D^I}{\One}{0}{0}}
+            {\One_1 \: io.91}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {}
+            {\ioIXb{\fb{\G;\cdot;\D^I}{2}}{\D^I}{\One}{0}{1}}
+            {\One_2 \: io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {}
+            {\ioIXb{\G;\X^\Bot;\D^I}{\D^I}{\Top}{1}{0}}
+            {\Top_1 \: io.91}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {}
+            {\ioIXb{\fb{\G;\X;\D^I}{3}}{\D^I}{\Top}{1}{1}}
+            {\Top_2 \: io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_1}{0}{s}}
+            {\ioIXb{\fb{\G;(\X,\D^I-\D^O);\cdot}{4}}{\D^\Bot}{G_2}{v}{1}}
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_1 \With G_2}{0}{s}}
+            {\With_1 io.91}
+        \\ \\
+        \ruleII
+          {\ioIXb{\G;\X;\D^I}{\D'}{G_1}{1}{s}}
+          {\ioIXb{\fb{\G;(\X,\D^I-\D');\D'}{5}}{\D^O}{G_2}{v}{1}}
+          {\ioIXb{\G;\X;\D^I}{\D^O}{G_1 \With G_2}{v}{s}}
+          {\With_2 io.91}
+      \end{array}
+    \right\}$
+    \\ \\
+    \hline
+  \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.91}
+    \label{fig:RC_IXb1}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^1$ {\tt pick\_resource}
+
+$^2$ {\tt strict}
+
+$^3$ {\tt erase\_strict}
+
+$^4$ {\tt strict\_difference\_and\_erase}
+
+$^5$ {\tt strict\_difference\_and\_keep}
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIXb{\G;\cdot;\D^I}{\D'}{G_1}{v_1}{0}}
+            {\ioIXb{\G;\cdot;\D'}{\D^O}{G_2}{v_2}{0}}
+            {\ioIXb{\G;\X^\top;\D^I}{\D^O}{G_1 \Times G_2}{v_1 \vee v_2}{0}}
+            {\Times_1 io.91}
+        \\ \\
+          \ruleII
+            {\ioIXb{\fb{\G;\cdot;(\X,\D^I)}{6}}{\D'}{G_1}{0}{0}}
+            {\ioIXb{\fb{\G;(\X \cap \D');(\D^I \cap \D')}{7}}{\D^O}{G_2}{v}{1}}
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_1 \Times G_2}{v}{1}}
+            {\Times_2 io.91}
+        \\ \\
+          \ruleII
+            {\ioIXb{\fb{\G;\cdot;(\X,\D^I)}{6}}{\D'}{G_1}{1}{0}}
+            {\ioIXb{\G;\cdot;\D'}{\D^O}{G_2}{v}{0}}
+            {\ioIXb{\G;\X;\D^I}{\fb{\D^I \cap \D^O}{8}}{G_1 \Times G_2}{1}{1}}
+            {\Times_3 io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_1}{v}{s}}
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_1 \Plus G_2}{v}{s}}
+            {\Plus_1 io.91}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_2}{v}{s}}
+            {\ioIXb{\G;\X;\D^I}{\D^O}{G_1 \Plus G_2}{v}{s}}
+            {\Plus_2 io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIXb{\G;(\X,D);\D^I}{\D^O}{G}{v}{1}}
+          {\ioIXb{\G;\X;\D^I}{\D^O}{D \Lolli G}{v}{s}}
+          {\Lolli io.91}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIXb{(\G,D);\X;\D^I}{\D^O}{G}{v}{s}}
+          {\ioIXb{\G;\X;\D^I}{\D^O}{D \Imp G}{v}{s}}
+          {\Imp io.91}
+      \end{array}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {\ioIXb{\fb{\G;\X^\Bot;\cdot}{10}}{\D^\Bot}{G}{v}{0}}
+            {\ioIXb{\G;\X^\Bot;\D^I}{\D^I}{!G}{0}{0}}
+            {!_1 \: io.91}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIXb{\fb{\G;\cdot;\cdot}{10}}{\D^\Bot}{G}{v}{0}}
+            {\ioIXb{\fb{\G;\cdot;\D^I}{2}}{\D^I}{!G}{0}{1}}
+            {!_2 \: io.91}
+        \end{array}
+      \right\}$
+
+      \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIXb{\G;\X;\D^I}{\D^O}{[c/x]G}{v}{s}}
+          {\ioIXb{\G;\X;\D^I}{\D^O}{\A x. G}{v}{s}}
+          {\A \: io.91^*}
+       &
+         \hspace{3em}
+       &
+         \ruleI
+           {\ioIXb{\G;\X;\D^I}{\D^O}{[t/x]G}{v}{s}}
+           {\ioIXb{\G;\X;\D^I}{\D^O}{\E x. G}{v}{s}}
+           {\E \: io.91}
+       \end{array}$
+       \\ \\
+       \hline
+     \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.91 (Continued)}
+    \label{fig:RC_IXb2}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^6$ {\tt make\_non\_strict}
+
+$^7$ {\tt intersect\_input}
+
+$^8$ {\tt intersect}
+
+$^9$ {\tt d\_scan}
+
+$^{10}$ {\tt erase}
+
+
+
+
+\newpage
+\section{Resource consumption for LHHF, version 0.91}
+\label{s:RC_IXb}
+
+Version 0.9 of the proof system for resource management provides satisfactory
+solutions to all the problems we complained about in the previous
+sections. Unfortunately, the price to pay for this is rather high since
+almost all rules involve complex operations on the context (either exhaustive
+tests or shuffling formulas from the strict to the non-strict context or vice
+versa). Versions 0.91 to 0.94 attempt to reduce this overhead by keeping
+track of different kind of information. These systems were defined according
+to their sequence number and therefore represent the historical development
+of our ideas. The best and current system is version 0.94, discussed in \S
+\ref{s:RC_IXe}.
+
+The implementation of version 0.9 of resource management represents all three
+context in the same tree structure, differentiating the role of each formula
+by means of a tag. Consumed formulas are kept in that same tree. Therefore,
+each time we perform a test to check if the strict context is empty (rules
+{\bf I io.9}, {\bf $\One$ io.9} and {\bf $!$ io.9}), we have to visit all the
+formulas present in the context. This is clearly an expensive operation.
+Similarly, rules {\bf $\Top$ io.9} and {\bf $\Times_i$ io.9} visit the
+context to perform operations on strict formulas.
+
+Version 0.91 (figures \ref{fig:RC_IXb1} and \ref{fig:RC_IXb2}) associates
+with each judgment a boolean flag, $s$, written as a superscript to the
+sequent arrow, which indicates that the strict context is empty. If the flag
+is set, this context might contain some formulas, if it has value $0$, then
+there is for sure no formula in it. This is clearly an approximation of the
+contents of the strict context. Before doing any operation concerned with
+this context, we test this flag to check if it is empty. If so, we can save
+on most operations. Otherwise, we take the same course of actions as in
+system 0.9.
+
+This technical device is beneficial in the rules that deal with the
+connectives $\One$, $\Top$, $\Times$ and $!$.
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G}{v}{s,1}}
+            {\ioIXc{\fb{\G;\X;(\D^I,D)}{1}}{\D^O}{a}{v}{s,t}}
+            {d_1/io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G}{v}{1,t}}
+            {\ioIXc{\fb{\G;(\X,D);\D^I}{1}}{\D^O}{a}{v}{s,t}}
+            {d_2/io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioIXc{(\G,D);\X;\D^I}{\D^O}{G}{v}{s,t}}
+        {\ioIXc{\fb{(\G,D);\X;\D^I}{1}}{\D^O}{a}{v}{s,t}}
+        {!d/io.92}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {}
+            {\ioIXc{\G;\X^\Bot;\D^I}{\D^I}{\eq{a}{a}}{0}{0,t}}
+            {I_1 \: io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {}
+            {\ioIXc{\fb{\G;\cdot;\D^I}{2}}{\D^I}{\eq{a}{a}}{0}{1,t}}
+            {I_2 \: io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {}
+            {\ioIXc{\G;\X^\Bot;\D^I}{\D^I}{\One}{0}{0,t}}
+            {\One_1 \: io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {}
+            {\ioIXc{\fb{\G;\cdot;\D^I}{2}}{\D^I}{\One}{0}{1,t}}
+            {\One_2 \: io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {}
+            {\ioIXc{\G;\X^\Bot;\D^I}{\D^I}{\Top}{1}{0,t}}
+            {\Top \: io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {}
+            {\ioIXc{\fb{\G;\X;\D^I}{3}}{\D^I}{\Top}{1}{1,t}}
+            {\Top \: io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIXc{\G;\X;\cdot}{\D^\bot}{G_1}{v_1}{s,0}}
+            {\ioIXc{\G;\X;\cdot}{\D^\Bot}{G_2}{v_2}{s,0}}
+            {\ioIXc
+              {\G;\X;\D^\bot}{\D^\bot}
+              {G_1 \With G_2}
+              {v_1 \wedge v_2}{s,0}}
+            {\With_1 io.92}
+        \\ \\
+          \ruleII
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1}{0}{s,1}}
+            {\ioIXc{\fb{\G;(\X,\D^I-\D^O);\cdot}{4}}{\D^\Bot}{G_2}{v}{1,0}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1 \With G_2}{0}{s,1}}
+            {\With_2 io.92}
+        \\ \\
+          \ruleII
+            {\ioIXc{\G;\X;\D^I}{\D'}{G_1}{1}{s,1}}
+            {\ioIXc{\fb{\G;(\X,\D^I-\D');\D'}{5}}{\D^O}{G_2}{v}{1,1}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1 \With G_2}{v}{s,1}}
+            {\With_3 io.92}
+        \end{array}
+      \right\}$
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.92}
+    \label{fig:RC_IXc1}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^1$ {\tt pick\_resource}
+
+$^2$ {\tt strict}
+
+$^3$ {\tt erase\_strict}
+
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIXc{\G;\cdot;\D^I}{\D'}{G_1}{0}{0,t}}
+            {\ioIXc{\G;\cdot;\D'}{\D^O}{G_2}{v}{0,t}}
+            {\ioIXc{\G;\X^\bot;\D^I}{\D^O}{G_1 \Times G_2}{v}{0,t}}
+            {\Times_1 io.92}
+        \\ \\
+          \ruleII
+            {\ioIXc{\fb{\G;\cdot;(\X,\D^I)}{6}}{\D'}{G_1}{0}{0,1}}
+            {\ioIXc
+              {\fb{\G;(\X \cap \D');(\D^I \cap \D')}{7}}
+              {\D^O}
+              {G_2}{v}{1,t}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1 \Times G_2}{v}{1,t}}
+            {\Times_2 io.92}
+        \\ \\
+          \ruleII
+            {\ioIXc{\fb{\G;\cdot;(\X,\D^I)}{6}}{\D'}{G_1}{1}{0,1}}
+            {\ioIXc{\G;\cdot;\D'}{\D^O}{G_2}{v}{0,1}}
+            {\ioIXc
+              {\G;\X;\D^I}
+              {\fb{\D^I \cap \D^O}{8}}
+              {G_1 \Times G_2}{1}{1,t}}
+            {\Times_3 io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1}{v}{s,t}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1 \Plus G_2}{v}{s,t}}
+            {\Plus_1 io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_2}{v}{s,t}}
+            {\ioIXc{\G;\X;\D^I}{\D^O}{G_1 \Plus G_2}{v}{s,t}}
+            {\Plus_2 io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIXc{\fb{\G;(\X,D);\D^I}{9}}{\D^O}{G}{v}{1,t}}
+          {\ioIXc{\G;\X;\D^I}{\D^O}{D \Lolli G}{v}{s,t}}
+          {\Lolli io.92}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIXc{\fb{(\G,D);\X;\D^I}{9}}{\D^O}{G}{v}{s,t}}
+          {\ioIXc{\G;\X;\D^I}{\D^O}{D \Imp G}{v}{s,t}}
+          {\Imp io.92}
+      \end{array}$
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.92 (Continued)}
+    \label{fig:RC_IXc2}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^4$ {\tt strict\_difference\_and\_erase}
+
+$^5$ {\tt strict\_difference\_and\_keep}
+
+$^6$ {\tt make\_non\_strict}
+
+$^7$ {\tt intersect\_input}
+
+$^8$ {\tt intersect}
+
+$^9$ {\tt d\_scan}
+
+$^{10}$ {\tt erase}
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {\ioIXc{\G;\X^\Bot;\D_1^\Bot}{\D_2^\Bot}{G}{v}{0,0}}
+            {\ioIXc{\G;\X^\Bot;\D_1^\Bot}{\D_2^\Bot}{!G}{0}{0,0}}
+            {!_1 \: io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIXc{\G;\cdot;\D_1^\Bot}{\D_2^\Bot}{G}{v}{0,0}}
+            {\ioIXc{\fb{\G;\cdot;\D_1^\Bot}{2}}{\D_2^\Bot}{!G}{0}{1,0}}
+            {!_2 \: io.92}
+        \\ & & \\
+          \ruleI
+            {\ioIXc{\fb{\G;\X^\Bot;\cdot}{10}}{\D^\Bot}{G}{v}{0,0}}
+            {\ioIXc{\G;\X^\Bot;\D^I}{\D^I}{!G}{0}{0,1}}
+            {!_3 \: io.92}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIXc{\fb{\G;\cdot;\cdot}{10}}{\D^\Bot}{G}{v}{0,0}}
+            {\ioIXc{\fb{\G;\cdot;\D^I}{2}}{\D^I}{!G}{0}{1,1}}
+            {!_4 \: io.92}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIXc{\G;\X;\D^I}{\D^O}{[c/x]G}{v}{s,t}}
+          {\ioIXc{\G;\X;\D^I}{\D^O}{\A x. G}{v}{s,t}}
+          {\A \: io.92^*}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIXc{\G;\X;\D^I}{\D^O}{[t/x]G}{v}{s,t}}
+          {\ioIXc{\G;\X;\D^I}{\D^O}{\E x. G}{v}{s,t}}
+          {\E \: io.92}
+      \end{array}$
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.92 (Continued)}
+    \label{fig:RC_IXc3}
+  \end{center}
+\end{figure}
+
+
+
+\newpage
+\section{Resource consumption for LHHF, version 0.92}
+\label{s:RC_IXc}
+
+The next version of the resource management system (version 0.92) pushes this
+idea further by associating to each judgment a {\em non-strict flag\/} $t$
+that has value $0$ only if the non-strict context is for sure empty, while is
+assigned the value $1$ if this context might contain some formula.
+
+Testing this flag allows to save even more computation when solving an
+additive conjunction and an exponential. Moreover it provides a better
+approximation to the value of the strict flag $s$.
+
+The rules of this system are presented in figures \ref{fig:RC_IXc1},
+\ref{fig:RC_IXc2} and \ref{fig:RC_IXc3}.
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIXd
+              {\G;\ob{\X; \D^I}{s,t-1}{t'}}
+              {\D^O}{G}{v}}
+            {\ioIXd
+              {\fb{\G;\ub{\X;(\D^I,D)}{s,t}{t'}}{1}}
+              {\D^O}{a}{v}}
+            {d_1/io.93}
+        &
+          \hspace{0.5em}
+        &
+          \ruleII
+            {\decd{D}{a}{G}}
+            {\ioIXd
+              {\G; \ob{\X;\D^I}{s-1,t}{t'}}
+              {\D^O}{G}{v}}
+            {\ioIXd
+              {\fb{\G;\ub{(\X,D);\D^I}{s,t}{t'}}{1}}
+              {\D^O}{a}{v}}
+            {d_2/io.93}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\ruleII
+        {\decd{D}{a}{G}}
+        {\ioIXd
+          {(\G,D);\ob{\X;\D^I}{s,t}{t'}}
+          {\D^O}{G}{v}}
+        {\ioIXd
+          {\fb{(\G,D);\ub{\X;\D^I}{s,t}{t'}}{1}}
+          {\D^O}{a}{v}}
+        {!d/io.93}$
+
+      \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {}
+          {\ioIXd
+            {\fb{\G;\ub{\cdot;\D^I}{s,t}{t}}{2}}
+            {\D^I}{\eq{a}{a}}{0}}
+          {I \: io.93}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {}
+          {\ioIXd
+            {\fb{\G;\ub{\cdot;\D^I}{s,t}{t}}{2}}
+            {\D^I}{\One}{0}}
+          {\One \: io.93}
+      \end{array}$
+
+      \\ \\
+      $\ruleI
+        {}
+        {\ioIXd
+          {\fb{\G;\ub{\X;\D^I}{s,t}{t}}{3}}
+          {\D^I}{\Top}{1}}
+        {\Top \: io.93}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIXd
+              {\G;\ob{\X;\D^I}{s,t}{t'}}
+              {\D^O}{G_1}{0}}
+            {\ioIXd
+              {\fb{\G;\ob{(\X,\D^I-\D^O);\cdot}{s+t-t',0}{t^\Bot}}{4}}
+              {\D^\Bot}{G_2}{v}}
+            {\ioIXd
+              {\G;\ub{\X;\D^I}{s,t}{t'}}
+              {\D^O}{G_1 \With G_2}{0}}
+            {\With_1 io.93}
+        \\ \\
+          \ruleII
+          {\ioIXd
+            {\G;\ob{\X;\D^I}{s,t}{t'}}
+            {\D'} {G_1}{1}}
+          {\ioIXd
+            {\fb{\G;\ob{(\X,\D^I-\D');\D'}{s+t-t',t'}{t''}}{5}}
+            {\D^O}{G_2}{v}}
+          {\ioIXd
+            {\G;\ub{\X;\D^I}{s,t}{t''}}
+            {\D^O}{G_1 \With G_2}{v}}
+          {\With_2 io.93}
+      \end{array}
+    \right\}$
+    \\ \\
+    \hline
+  \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.93}
+    \label{fig:RC_IXd1}
+  \end{center}
+\end{figure}
+
+\bigskip
+$^1$ {\tt pick\_resource}
+
+$^2$ {\tt strict}
+
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+      $\left\{
+        \begin{array}{c}
+          \ruleII
+            {\ioIXd
+              {\fb{\G;\ob{\cdot;(\X,\D^I)}{0,s+t}{t'}}{6}}
+              {\D'}{G_1}{0}}
+            {\ioIXd
+              {\fb{\G;\ob{(\X \cap \D');(\D^I \cap \D')}{s^7,t^7}{t''}}{7}}
+              {\D^O}{G_2}{v}}
+            {\ioIXd
+              {\G;\ub{\X;\D^I}{s,t}{t''}}
+              {\D^O}{G_1 \Times G_2}{v}}
+            {\Times_1 io.93}
+        \\ \\
+          \ruleII
+            {\ioIXd
+              {\fb{\G;\ob{\cdot;(\X,\D^I)}{0,s+t}{t'}}{6}}
+              {\D'}{G_1}{1}}
+            {\ioIXd
+              {\G;\ob{\cdot;\D'}{0,t'}{t''}}
+              {\D^O}{G_2}{v}}
+            {\ioIXd
+              {\G;\ub{\X;\D^I}{s,t}{t^8}}
+              {\fb{\D^I \cap \D^O}{8}}{G_1 \Times G_2}{1}}
+            {\Times_2 io.93}
+        \end{array}
+      \right\}$
+
+      \\ \\ \\
+      $\left\{
+        \begin{array}{ccc}
+          \ruleI
+            {\ioIXd
+              {\G;\ob{\X;\D^I}{s,t}{t'}}
+              {\D^O}{G_1}{v}}
+            {\ioIXd
+              {\G;\ub{\X;\D^I}{s,t}{t'}}
+              {\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_1 io.93}
+        &
+          \hspace{0.5em}
+        &
+          \ruleI
+            {\ioIXd
+              {\G;\ob{\X;\D^I}{s,t}{t'}}
+              {\D^O}{G_2}{v}}
+            {\ioIXd
+              {\G;\ub{\X;\D^I}{s,t}{t'}}
+              {\D^O}{G_1 \Plus G_2}{v}}
+            {\Plus_2 io.93}
+        \end{array}
+      \right\}$
+
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.93 (Continued)}
+    \label{fig:RC_IXd2}
+  \end{center}
+\end{figure}
+
+\bigskip
+
+$^3$ {\tt erase\_strict}
+
+$^4$ {\tt strict\_difference\_and\_erase}
+
+$^5$ {\tt strict\_difference\_and\_keep}
+
+$^6$ {\tt make\_non\_strict}
+
+$^7$ {\tt intersect\_input}
+
+$^8$ {\tt intersect}
+
+$^9$ {\tt augment}
+
+$^{10}$ {\tt take\_back}
+
+$^{11}$ {\tt erase}
+
+
+
+\clearpage
+\begin{figure}[t]
+  \begin{center}
+    \leavevmode
+
+    \begin{tabular}{|c|}
+      \hline \\
+
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIXd
+            {\fb{\G;\ob{(\X,D);\D^I}{s+s^9,t}{t'}}{9}}
+            {\D^O}{G}{v}}
+          {\ioIXd
+            {\G;\ub{\X;\D^I}{s,t}{t'}}
+            {\fb{\D^O}{10}}{D \Lolli G}{v}}
+          {\Lolli io.93}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIXd
+            {\fb{(\G,D);\ob{\X;\D^I}{s,t}{t'}}{9}}
+            {\D^O}{G}{v}}
+          {\ioIXd
+            {\G;\ub{\X;\D^I}{s,t}{t'}}
+            {\fb{\D^O}{10}}{D \Imp G}{v}}
+          {\Imp io.93}
+      \end{array}$
+
+      \\ \\ \\
+      $\ruleI
+        {\ioIXd
+          {\fb{\G;\ob{\cdot;\cdot}{0,0}{t^\Bot}}{11}}
+          {\D^\Bot}{G}{v}}
+        {\ioIXd
+          {\fb{\G;\ub{\cdot;\D^I}{s,t}{t}}{2}}
+          {\D^I}{!G}{0}}
+        {! \: io.93}$
+
+      \\ \\ \\
+      $\begin{array}{ccc}
+        \ruleI
+          {\ioIXd
+            {\G;\ob{\X;\D^I}{s,t}{t'}}
+            {\D^O}{[c/x]G}{v}}
+          {\ioIXd
+            {\G;\ub{\X;\D^I}{s,t}{t'}}
+            {\D^O}{\A x. G}{v}}
+          {\A \: io.93^*}
+      &
+        \hspace{3em}
+      &
+        \ruleI
+          {\ioIXd
+            {\G;\ob{\X;\D^I}{s,t}{t'}}
+            {\D^O}{[t/x]G}{v}}
+          {\ioIXd
+            {\G;\ub{\X;\D^I}{s,t}{t'}}
+            {\D^O}{\E x. G}{v}}
+          {\E \: io.93}
+      \end{array}$
+      \\ \\
+      \hline
+    \end{tabular}
+
+    \caption{Resource consumption for {\em LHHF}, version 0.93 (Continued)}
+    \label{fig:RC_IXd3}
+  \end{center}
+\end{figure}
+\hspace*{1em}
+
+
+\clearpage
+\section{Resource consumption for LHHF, version 0.93}
+\label{s:RC_IXd}
+
+The flags that characterize version 0.92 of the proof system provide correct
+but imprecise information about the contents of the two parts of the linear
+context. In particular, an empty context might be labelled as non-empty due
+to the roughness of the data we can store in our two flags. We can gain in
+efficiency if we gain in precision.
+
+Version 0.93 of context management achieves total accuracy by substituting the
+flags of the previous version with two counters that record exactly how many
+formulas are present in either part of the linear context. These counters
+(that we continue to call $s$ and $t$) are integrated into the data structure
+used to represent the contexts in order to achieve data abstraction. The
+operations that manipulate the context are in charge of maintaining the value
+of these counters correct. In particular, each time an output context is
+produced, we must make available the number of formulas present in it.
+
+The resulting proof system is presented in figures \ref{fig:RC_IXd1},
+\ref{fig:RC_IXd2} and \ref{fig:RC_IXd3}. Notice that it corresponds to
+version 0.9 of resource management with the addition of annotations
+specifying how to calculate the number of formulas in the strict, non-strict
+and output contexts.
+
+
+\section{Resource consumption for LHHF, version 0.94}
+\label{s:RC_IXe}
+
+Rules {\bf $\Times_i$ io.93} in version 0.93 of the proof system for context
+management perform a very expensive operation each time a tensor is to be
+solved (and the strict context is not empty). Multiplicative conjunction is
+however the most commonly used connective in {\em Lolli}. Notice that these
+rules solve left conjunct in an empty strict context. Therefore, if this
+goal contains nested occurrences of $\Times$, no context shuffling is
+required to solve the relative subgoals. We can take advantage of this
+observation by requiring $\Times$ to be parsed as a left associative operator.
+System 0.94 is just a version of system 0.93 in which this requirement is
+enforced.
+
+
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{HoM94}
+  J.S.\ Hodas and D.\ Miller. Logic Programming in a Fragment of Linear
+  Logic. {\em Journal of Information and Computation}, 110(2):327--365, 1994.
+  
+\bibitem{Pfe95}
+  F.\ Pfenning. {\em Computation and Deduction}, draft notes
+  for a course given at Carnegie Mellon University during the Spring
+  semester of 1994.
+  
+\end{thebibliography}
+
+\end{document}
+

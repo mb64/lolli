@@ -1,0 +1,110 @@
+		Standard ML of New Jersey
+	      Version 0.75, 11 November 1991
+
+	------------------------------------------------
+
+STANDARD ML OF NEW JERSEY COPYRIGHT NOTICE, LICENSE AND DISCLAIMER.
+
+Copyright 1989, 1990, 1991 by AT&T Bell Laboratories
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both the copyright notice and this permission notice and warranty
+disclaimer appear in supporting documentation, and that the name of
+AT&T Bell Laboratories or any AT&T entity not be used in advertising
+or publicity pertaining to distribution of the software without
+specific, written prior permission.
+
+AT&T disclaims all warranties with regard to this software, including
+all implied warranties of merchantability and fitness.  In no event
+shall AT&T be liable for any special, indirect or consequential
+damages or any damages whatsoever resulting from loss of use, data or
+profits, whether in an action of contract, negligence or other
+tortious action, arising out of or in connection with the use or
+performance of this software.
+
+	------------------------------------------------
+
+This file describes how to obtain the latest release of Standard ML of
+New Jersey, version 0.75.
+
+Send comments and bug reports to:
+
+   David MacQueen
+   Room 2C-322
+   AT&T Bell Laboratories
+   Murray Hill, NJ 07974
+   USA
+   phone: 908-582-7691
+   email: macqueen@research.att.com
+
+The Release Notes, found in files doc/release-notes/releaseNotes.{txt,ps},
+contain instructions for installing the compiler and a more detailed
+description of the distribution.
+
+
+FTP distribution instructions
+
+The primary means of distributing the compiler is anonymous internet
+ftp.  For those who do not have internet access directly or
+indirectly, distribution by tape is possible as a last resort.  The
+following table gives the ftp connection information.
+
+Host:		 	Net Address:	  Directory:
+----------------------------------------------------
+princeton.edu	 	128.112.128.1	  /pub/ml
+research.att.com 	192.20.225.2	  /dist/ml
+
+The directory pub/ml (dist/ml on research.att.com) contains this
+README file and the following compressed tar files:
+
+  75.releaseNotes.ps : Postscript version of Release Notes
+  75.releaseNotes.txt: raw text version of Release Notes
+  75.doc.tar.Z       : the doc directory containing documentation
+  75.src.tar.Z       : the src directory containing source code
+  75.lib.tar.Z       : the lib directory containing library software
+  75.tools.tar.Z     : the tools directory containing useful utilities
+  75.mo.m68.tar.Z    : the mo.m68 directory of m68 object files
+  75.mo.vax.tar.Z    : the mo.vax directory of vax object files
+  75.mo.sparc.tar.Z  : the mo.sparc directory of sparc object files
+  75.mo.mipsl.tar.Z  : MIPS Little-endian object files (for DEC machines)
+  75.mo.mipsb.tar.Z  : MIPS Big-endian object files (for MIPSCo, SGI)
+
+You need only transfer the 75.mo.*.tar.Z files that you need for your
+machines (e.g. 75.mo.m68.tar.Z for Sun 3, NeXT, etc., 75.mo.vax.tar.Z
+for Vax).  The Release Notes are also included in the doc directory.
+
+***************************************************************************
+NOTE: Ftp should be put into binary mode before transferring the compressed
+tar files.
+***************************************************************************
+
+Here is a sample dialog:
+
+   ftp
+   ftp> open princeton.edu
+   Name: anonymous
+   Password: <your name@host>
+   ftp> binary
+   ftp> cd pub/ml
+   ftp> get README
+   ftp> get 75.src.tar.Z
+   ftp> get 75.lib.tar.Z
+   ftp> get 75.tools.tar.Z
+   ftp> get 75.doc.tar.Z
+   ftp> get 75.mo.m68.tar.Z
+   ftp> get 75.mo.vax.tar.Z
+   ftp> close
+   ftp> quit
+
+After the files are transferred they should be uncompressed 
+and then extracted using tar into a directory called (e.g.) mldist.
+For example:
+
+   mkdir mldist
+   mv 75.src.tar.Z mldist
+   cd mldist
+   zcat 75.src.tar.Z | tar fox -
+
+will install the src directory.

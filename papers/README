@@ -1,0 +1,55 @@
+This directory contains DVI files for several papers and documents
+relevant to Lolli. It duplicates the papers directory in the Lolli
+distribution. This way, as papers are added the distribution, those 
+who already have Lolli need not retrieve the whole distribution in
+order to get the new papers.
+
+elpsml.dvi 	- Elliot & Pfenning, "A Semi-Functional Implementation 
+		  of a Higher-Order Logic Programming Language", from
+		  "Topics in Advanced Language Implementation" , 
+		  MIT Press, Peter Lee editor
+
+		  This paper presents an excellent tutorial on implementing
+		  interpreters for Prolog-like languages in a functional
+		  setting.
+
+
+ic92.dvi	- This paper has been removed and replaced with a
+		  slightly revised version described below.
+
+
+ic94.dvi	- Hodas & Miller, "Logic Programming in a Fragment of
+		  Intuitionistic Linear Logic", to appear in Information
+		  and Computation in late Spring 1994.
+
+		  This paper provides extensive background on the
+		  motivations and proof theory of the language.
+
+		  This paper has previously been distributed as ic92.dvi.
+		  Some revisions have been incorporated during the lengthy
+		  wait for publication.
+
+
+lppl.dvi	- Hodas, "Lolli - an Extension of \lambda Prolog with
+		  Linear Context Management", from the 1992 Workshop on
+		  the \lamda Prolog Programming Language. 
+
+		  This short paper can be used as a quick introduction to 
+		  Lolli syntax, and the language's relationship to \lambda
+		  Prolog.
+
+
+gap.dvi		- Hodas, "Specifying Filler-Gap Dependency Parsers in a 
+		  Linear Logic-Programming Language", to appear in the
+		  Proceedings of the 1992 Joint International Conference
+		  and Symposium on Logic Programming.
+
+		  This paper expands on the natural language parsing
+		  example from ic92.dvi, and develops a general framework
+		  for this style of parser.
+
+
+newio.dvi	- A one page file. This is the specification for the variant
+		  of the IO proof system (developed in ic92.dvi) that is
+		  actually implemented.
+

@@ -1,0 +1,79 @@
+% cprolog
+C-Prolog version 1.5
+| ?- ['llinterp.pro'].
+llinterp.pro consulted 3456 bytes 0.0666667 sec.
+
+yes
+| ?- ['database.ll'].
+database.ll consulted 1044 bytes 1.98682e-08 sec.
+
+yes
+| ?- prove(nil,nil,db).
+Command: enter(enrolled(jane,cs1)).
+Command: check(enrolled(jane,X)).
+enrolled(jane,cs1) is an entry.
+Command: update(enrolled(jane,cs1),enrolled(jane,cs2)).
+Command: check(enrolled(jane,X)).
+enrolled(jane,cs2) is an entry.
+Command: quit.
+
+yes
+| ?- [-'intuit.ll'].
+intuit.ll reconsulted 2896 bytes 0.0666667 sec.
+
+yes
+| ?- prove(nil,nil, pv((a or b) imp (b or a))).
+
+yes
+| ?- [-'natlang.ll'].
+natlang.ll reconsulted -60 bytes 0.0333335 sec.
+
+yes
+| ?- exrel(N,R), prove(nil,nil,rel(R,nil)).
+
+N = 1
+R = whom::mary::believes::that::bob::married::nil ;
+
+N = 2
+R = whom::bob::married::nil ;
+
+no
+| ?- [-'rewrite.ll'].
+rewrite.ll reconsulted 96 bytes 3.8147e-07 sec.
+
+yes
+| ?- prove(nil,nil,perm(a::b::c::nil,K)).
+
+K = c::b::a::nil ;
+
+K = c::a::b::nil ;
+
+K = b::c::a::nil ;
+
+K = b::a::c::nil ;
+
+K = a::c::b::nil ;
+
+K = a::b::c::nil ;
+
+no
+| ?- [-'switch.ll'].
+switch.ll reconsulted 188 bytes 0.0166669 sec.
+
+yes
+| ?- prove(nil,nil,test(N,V)).
+
+N = 1
+V = off ;
+
+N = 2
+V = on ;
+
+N = 3
+V = off ;
+
+N = 4
+V = off ;
+
+no
+| ?- 

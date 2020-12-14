@@ -1,0 +1,172 @@
+MODULE iqblock.
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+% The 64 squares
+sq : nat -> nat -> type.
+
+% Initializing the squares
+% Takes a continuation argument!
+init : nat -> nat -> type -> type.
+next : nat -> nat -> type -> type.
+
+ini : init X Y K o- (sq X Y -o next X Y K).
+n00 : next z z K o- K.
+n0Y : next z (s Y) K o- init z Y K.
+nX0 : next (s X) z K o- init X (s (s (s (s (s (s (s z))))))) K.
+nXY : next (s X) (s Y) K o- init (s X) Y K.
+
+
+% Directions
+dir : type.
+n : dir.  e : dir. s : dir. w : dir.
+ne : dir.  ssw : dir.  wwn : dir.
+
+% Initializing the tiles, pre-rotated.
+% Congruent shapes have been eliminated
+% These are all linear
+
+blue ::
+  tile (n::n::n::e::e::s::w::nil)
+& tile (e::e::e::s::s::w::n::nil)
+& tile (n::e::s::e::n::n::n::nil)
+& tile (n::n::e::s::s::e::e::nil)
+& tile (n::e::s::ne::s::s::s::nil)
+& tile (e::e::e::n::n::w::s::nil)
+& tile (e::e::n::w::w::n::n::nil)
+& tile (e::n::w::n::e::e::e::nil).
+
+forest ::
+  tile (n::n::n::e::e::nil)
+& tile (e::e::e::s::s::nil)
+& tile (e::e::n::n::n::nil)
+& tile (n::n::sse::e::e::nil)
+& tile (e::e::s::s::s::nil)
+& tile (e::e::e::n::n::nil)
+& tile (e::e::wwn::n::n::nil)
+& tile (n::n::e::e::e::nil).
+
+tan ::
+  tile (n::e::e::e::s::w::w::nil)
+& tile (n::n::n::e::s::s::s::nil).
+
+green ::
+  tile (e::e::s::s::e::e::nil)
+& tile (n::n::e::e::n::n::nil)
+& tile (e::e::n::n::e::e::nil)
+& tile (n::n::sse::e::s::s::nil).
+
+purple ::
+  tile (n::e::s::e::e::nil)
+& tile (n::n::n::e::s::nil)
+& tile (e::e::e::s::w::nil)
+& tile (e::n::w::ne::n::nil)
+& tile (e::e::e::n::w::nil)
+& tile (e::n::w::n::n::nil)
+& tile (n::e::s::ne::e::nil)
+& tile (n::e::s::s::s::nil).
+
+yellow ::
+  tile (n::e::s::ne::nil)
+& tile (n::e::s::s::nil)
+& tile (e::e::n::w::nil)
+& tile (e::n::w::n::nil)
+& tile (e::e::s::w::nil)
+& tile (e::n::w::ne::nil)
+& tile (n::e::s::e::nil)
+& tile (n::n::e::s::nil).
+
+pink ::
+  tile (e::e::n::n::nil)
+& tile (n::n::sse::e::nil)
+& tile (n::n::e::e::nil)
+& tile (e::e::s::s::nil).
+
+orange ::
+  tile (e::n::n::nil)
+& tile (e::e::wwn::nil)
+& tile (n::n::e::nil)
+& tile (e::e::s::nil)
+& tile (n::e::e::nil)
+& tile (e::s::s::nil)
+& tile (e::e::n::nil)
+& tile (n::n::sse::nil).
+
+grass ::
+  tile (n::e::n::e::s::s::w::nil)
+& tile (n::n::e::s::e::s::w::nil)
+& tile (n::n::e::e::s::w::s::nil)
+& tile (n::e::e::s::s::w::n::nil).
+
+brown ::
+  tile (n::e::s::s::s::s::nil)
+& tile (e::e::e::e::n::w::nil)
+& tile (e::n::w::n::n::n::nil)
+& tile (n::e::s::ne::e::e::nil)
+& tile (e::e::e::e::s::w::nil)
+& tile (e::n::w::ne::n::n::nil)
+& tile (n::e::s::e::e::e::nil)
+& tile (n::n::n::n::e::s::nil).
+
+
+%% Placing a piece if it fits
+
+fits : list dir -> nat -> nat -> type -> type.
+
+fn : fits (n :: Ds) X (s Y) K
+      o- sq X Y o- (filled X (s Y) -> fits Ds X Y K).
+
+fe : fits (e :: Ds) (s X) Y K
+      o- sq X Y o- (filled (s X) Y -> fits Ds X Y K).
+
+fs : fits (s :: Ds) X Y K
+      o- sq X (s Y) o- (filled X Y -> fits Ds X (s Y) K).
+
+fw : fits (w :: Ds) X Y K
+      o- sq (s X) Y o- (filled X Y -> fits Ds (s X) Y K).
+
+fne : fits (ne :: Ds) (s X) (s Y) K
+       o- sq X Y o- (filled (s X) (s Y) -> fits Ds X Y K).
+
+fsse : fits (sse :: Ds) (s X) Y
+	o- sq X (s (s Y))
+	o- (filled (s X) Y -> fits Ds X (s (s Y))).
+
+fwwn : fits (wwn :: Ds) X (s Y) K
+	o- sq (s (s X)) Y
+	o- (filled X (s Y) -> fits Ds (s (s X)) Y).
+
+fnil : fits nil X Y K o- (filled X Y -> K).
+
+
+%% Top level control
+
+findnext : nat -> nat -> type.
+nextplace : nat -> nat -> type.
+place : nat -> nat -> type.
+
+f00 : findnext z z.
+f0Y : findnext z (s Y)
+       o- nextplace z Y.
+fX0 : findnext (s X) z
+       o- nextplace X (s (s (s (s (s (s (s z))))))).
+fXY : findnext (s X) (s Y)
+       o- nextplace (s X) Y.
+
+npfi : nextplace X Y <- filled X Y o- findnext X Y.
+npsq : nextplace X Y o- sq X Y o- place X Y.
+
+pXY : place X Y
+       o- tile Ds
+       o- fits Ds X Y (findnext X Y).
+
+solve : type.
+
+sl : solve
+      o- init (s (s (s (s (s (s (s z)))))))
+	      (s (s (s (s (s (s (s z)))))))
+	      (nextplace
+		 (s (s (s (s (s (s (s z)))))))
+		 (s (s (s (s (s (s (s z)))))))).

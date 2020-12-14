@@ -1,0 +1,13 @@
+%%% Bug in 0.8
+Starting Lolli version 0.8, Feb 19, 1995 -fp
+  (built with Standard ML of New Jersey, Version 0.93, February 15, 1993)...
+?- r -o s -o (((r , erase) & s) , r).
+solved;
+no
+
+%%% Correct behavior on 0.8a
+
+Starting Lolli version 0.8a, Feb 27, 1995 -fp
+  (built with Standard ML of New Jersey, Version 0.93, February 15, 1993)...
+?- r -o s -o (((r , erase) & s) , r).
+no
