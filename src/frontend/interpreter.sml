@@ -855,7 +855,7 @@ and top_level (promptstr:string) prog uvars subst =
 
 and more_solutions () =
     if (!all_solutions) then ( print ";\n" ; true )
-    else let val input = TextIO.inputLine TextIO.stdIn
+    else let val input = case TextIO.inputLine TextIO.stdIn of SOME(x) => x | NONE => raise EXIT
 	 in	
 	     if input = "\n" then false
 	     else if String.substring (input,0,1) = ";" then true
@@ -867,9 +867,7 @@ and more_solutions () =
 
 and ll_outer_level prog uvars =
 	 ((top_level "?- " prog uvars Terms.empty_substitution
-	     handle POP => (print ("You are now at the top level. " ^ 
-				     "Use 'bye' to leave Lolli.\n") ;
-			    ll_outer_level prog uvars))
+	     handle POP => (print "Closing Lolli. \n"; ()))
 	     handle POPALL => (print "Returning to topmost level.\n" ;
 			       ll_outer_level prog uvars))
 	     handle EXIT => (print "Closing Lolli. \n"; ())
@@ -877,7 +875,7 @@ and ll_outer_level prog uvars =
 and ll_file filename = print "Starting with a file loaded not currently supported.\n Use --o from within the system.\n"
 
 and ll () = ( (* System.Control.Print.signatures := 0 ;  --cs *)
-	      Compiler.Control.Print.printDepth := 15; 
+	      (* Compiler.Control.Print.printDepth := 15; *)
 	      (* System.Control.Runtime.gcmessages := 0 ;   --cs *)
 	      print ("Starting Lolli version " ^ ll_version ^ 
 		     "\n  (built with " ^ "SML/NJ 110" ^ ")...\n") ;

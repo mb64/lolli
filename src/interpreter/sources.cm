@@ -1,4 +1,5 @@
 group is
+  $/basis.cm
   terms.sml
   propositions.sml
   terms_to_props.sml

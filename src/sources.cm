@@ -1,5 +1,6 @@
 group is
+  $/basis.cm
   interpreter/sources.cm
-  ml-yacc/sources.cm
+  $/ml-yacc-lib.cm
   parser/sources.cm
   frontend/sources.cm

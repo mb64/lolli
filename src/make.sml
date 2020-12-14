@@ -1,4 +1,4 @@
-CM.make ();
+CM.make "sources.cm";
 
 fun export_ll () = 
   let fun aux (callname, args) = (Interpreter.ll (); OS.Process.success)

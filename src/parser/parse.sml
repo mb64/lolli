@@ -78,18 +78,22 @@ fun module_parse s =
 fun query_parse s = extract_query (parse(30, query_stream (string_reader s)))
 fun term_parse s = extract_term (parse(30, term_stream (string_reader s)))
 
+fun inputLine dev = case TextIO.inputLine dev of
+                      SOME("") => "\n"
+                    | SOME(x) => x
+                    | NONE => ""
 
 fun file_parse s =
   let val dev = TextIO.openIn s
-      val m_stream = module_stream (fn i => TextIO.inputLine dev)
+      val m_stream = module_stream (fn i => inputLine dev)
    in extract_module(parse(30, m_stream)) end
 
 fun stream_query_parse input_stream =
-  let val q_stream = query_stream (fn i => TextIO.inputLine input_stream)
+  let val q_stream = query_stream (fn i => inputLine input_stream)
    in extract_query(parse(0, q_stream)) end
 
 fun stream_term_parse input_stream =
-  let val t_stream = term_stream (fn i => TextIO.inputLine input_stream)
+  let val t_stream = term_stream (fn i => inputLine input_stream)
    in extract_term(parse(0, t_stream)) end
 
 end  (* functor Parse *)

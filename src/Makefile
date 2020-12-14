@@ -9,7 +9,7 @@
 # SML = /usr/misc/.sml/bin/sml-noshare
 # for alpha_osf1
 
-SML = sml-cm
+SML = smlnj
 
 Lolli: ; $(SML) < make.sml
 

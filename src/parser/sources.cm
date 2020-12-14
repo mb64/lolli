@@ -1,6 +1,7 @@
 Group is 
+  $/basis.cm
   ../interpreter/sources.cm
-  ../ml-yacc/sources.cm
+  $/ml-yacc-lib.cm
   fol.grm
   interface.sml
   absyn.sig
